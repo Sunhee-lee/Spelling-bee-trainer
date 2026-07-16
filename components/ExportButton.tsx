@@ -1,10 +1,11 @@
 "use client";
 
 import { Download } from "lucide-react";
+import type { VariantProps } from "class-variance-authority";
 
 import type { Book } from "@/types";
 import { toCsv } from "@/services/vocabIO";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 /** Turn a book name into a safe CSV file name. */
 function toFileName(name: string): string {
@@ -14,10 +15,16 @@ function toFileName(name: string): string {
 
 interface ExportButtonProps {
   book: Book;
+  size?: VariantProps<typeof buttonVariants>["size"];
+  variant?: VariantProps<typeof buttonVariants>["variant"];
 }
 
 /** Downloads the book's words as a `word,meaning` CSV file. */
-export function ExportButton({ book }: ExportButtonProps) {
+export function ExportButton({
+  book,
+  size,
+  variant = "outline",
+}: ExportButtonProps) {
   function handleExport() {
     const csv = toCsv(book.words.map((w) => ({ word: w.word, meaning: w.meaning })));
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -33,7 +40,8 @@ export function ExportButton({ book }: ExportButtonProps) {
 
   return (
     <Button
-      variant="outline"
+      variant={variant}
+      size={size}
       onClick={handleExport}
       disabled={book.words.length === 0}
     >
