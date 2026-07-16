@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Settings } from "lucide-react";
 
 import { useAppState } from "@/store/useVocabStore";
-import { isBookComplete } from "@/services/stats";
+import { computeBookStats, isBookComplete } from "@/services/stats";
 import { AppHeader } from "@/components/AppHeader";
 import { BookCard, type BookAccent } from "@/components/BookCard";
 import { Button } from "@/components/ui/button";
@@ -61,13 +61,28 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {state.books.map((book, i) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              accent={ACCENTS[i % ACCENTS.length]}
-            />
-          ))}
+          {state.books.map((book, i) => {
+            const pre = book.locked && book.unlockAfterBookId
+              ? state.books.find((b) => b.id === book.unlockAfterBookId)
+              : undefined;
+            const preStats = pre ? computeBookStats(pre) : undefined;
+            return (
+              <BookCard
+                key={book.id}
+                book={book}
+                accent={ACCENTS[i % ACCENTS.length]}
+                lockInfo={
+                  pre && preStats
+                    ? {
+                        name: pre.name,
+                        mastered: preStats.mastered,
+                        total: preStats.total,
+                      }
+                    : undefined
+                }
+              />
+            );
+          })}
         </div>
       )}
 

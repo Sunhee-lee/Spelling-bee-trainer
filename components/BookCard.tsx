@@ -41,9 +41,11 @@ function StatChip({ icon, label, value }: StatChipProps) {
 interface BookCardProps {
   book: Book;
   accent?: BookAccent;
+  /** Prerequisite progress shown on a locked card (e.g. Basic 100 → 42/100). */
+  lockInfo?: { name: string; mastered: number; total: number };
 }
 
-export function BookCard({ book, accent = "bee" }: BookCardProps) {
+export function BookCard({ book, accent = "bee", lockInfo }: BookCardProps) {
   const stats = computeBookStats(book);
   const colors = ACCENTS[accent];
   const isEmpty = stats.total === 0;
@@ -102,16 +104,23 @@ export function BookCard({ book, accent = "bee" }: BookCardProps) {
         </div>
 
         {book.locked && (
-          <p className="rounded-2xl bg-muted/70 px-4 py-2.5 text-center text-sm text-muted-foreground">
-            🔒 Master all of Basic 100 to unlock.
-          </p>
+          <div className="rounded-2xl bg-muted/70 px-4 py-2.5 text-center text-sm text-muted-foreground">
+            <p>
+              🔒 Unlock by mastering all of {lockInfo?.name ?? "Basic 100"}
+            </p>
+            {lockInfo && (
+              <p className="font-semibold tabular-nums">
+                {lockInfo.mastered} / {lockInfo.total}
+              </p>
+            )}
+          </div>
         )}
 
         <div className="flex flex-col gap-2 sm:flex-row">
           {canTest ? (
             <Button asChild size="lg" className="flex-1">
-              <Link href={`/books/${book.id}/test`}>
-                <Play className="fill-current" /> Start Test
+              <Link href={`/books/${book.id}/test?mode=today`}>
+                <Play className="fill-current" /> Today&rsquo;s Practice
               </Link>
             </Button>
           ) : (
@@ -120,10 +129,10 @@ export function BookCard({ book, accent = "bee" }: BookCardProps) {
               className="flex-1"
               disabled
               title={
-                book.locked ? "This book is locked" : "Add words to start a test"
+                book.locked ? "This book is locked" : "Add words to start"
               }
             >
-              <Play className="fill-current" /> Start Test
+              <Play className="fill-current" /> Today&rsquo;s Practice
             </Button>
           )}
           <Button asChild size="lg" variant="outline" className="flex-1">

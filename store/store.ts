@@ -76,8 +76,11 @@ export class VocabStore {
     if (this.hydrated) return;
     const loaded = this.repo.load();
     if (loaded) {
-      // Upgrade any older schema (e.g. words without a `number`) on load.
-      this.state = migrateState(loaded);
+      // Upgrade any older schema (e.g. words without a `number`) on load, and
+      // apply the one-way unlock latch so a restored/complete state is
+      // consistent (never re-locks).
+      const migrated = migrateState(loaded);
+      this.state = { ...migrated, books: applyLocks(migrated.books, false) };
       this.repo.save(this.state);
     } else {
       // First run — persist the seeded state.

@@ -63,6 +63,28 @@ export function buildTestWords(book: Book, settings: AppSettings): Word[] {
   return shuffleQuestions ? shuffle(questions) : questions;
 }
 
+/**
+ * Full Test: every word in the book, exactly once, in random order,
+ * regardless of mastery. Used for the pre-competition "check everything" run.
+ */
+export function buildFullTestWords(book: Book): Word[] {
+  return shuffle(book.words);
+}
+
+/** A shuffled review of just the mastered words (optional master check). */
+export function buildMasterReviewWords(book: Book): Word[] {
+  return shuffle(book.words.filter((w) => w.mastered));
+}
+
+/**
+ * Pick the given word ids from the book, shuffled. Used to re-test only the
+ * words missed in the previous run (wrong-answer retry).
+ */
+export function pickWordsByIds(book: Book, ids: readonly string[]): Word[] {
+  const wanted = new Set(ids);
+  return shuffle(book.words.filter((w) => wanted.has(w.id)));
+}
+
 /** Wrap words as ungraded test questions. */
 export function toQuestions(words: Word[]): TestQuestion[] {
   return words.map((word) => ({ word, result: null }));

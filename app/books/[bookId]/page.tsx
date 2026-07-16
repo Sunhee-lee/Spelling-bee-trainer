@@ -2,9 +2,17 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { BookOpen, Lock, Play } from "lucide-react";
+import {
+  BookOpen,
+  ClipboardCheck,
+  Lock,
+  Play,
+  Settings,
+  Trophy,
+} from "lucide-react";
 
-import { useBook } from "@/store/useVocabStore";
+import { useAppState } from "@/store/useVocabStore";
+import { computeBookStats } from "@/services/stats";
 import { AppHeader } from "@/components/AppHeader";
 import { BookOptions } from "@/components/BookOptions";
 import { BookProgress } from "@/components/BookProgress";
@@ -14,7 +22,8 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function BookDashboardPage() {
   const params = useParams<{ bookId: string }>();
-  const { book, hydrated } = useBook(params.bookId);
+  const { state, hydrated } = useAppState();
+  const book = state.books.find((b) => b.id === params.bookId);
 
   if (!hydrated) {
     return (
@@ -40,8 +49,14 @@ export default function BookDashboardPage() {
     );
   }
 
-  const isEmpty = book.words.length === 0;
+  const stats = computeBookStats(book);
+  const isEmpty = stats.total === 0;
   const canTest = !book.locked && !isEmpty;
+
+  const prerequisite = book.unlockAfterBookId
+    ? state.books.find((b) => b.id === book.unlockAfterBookId)
+    : undefined;
+  const preStats = prerequisite ? computeBookStats(prerequisite) : undefined;
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -55,10 +70,19 @@ export default function BookDashboardPage() {
       />
 
       {book.locked && (
-        <div className="flex items-center gap-2 rounded-2xl bg-muted/70 px-4 py-3 text-sm text-muted-foreground">
-          <Lock className="size-4 shrink-0" />
-          Master all of Basic 100 to unlock testing. You can still prepare its
-          words.
+        <div className="flex items-start gap-3 rounded-2xl bg-muted/70 px-4 py-3 text-sm">
+          <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <div>
+            <p className="font-semibold">
+              Unlock by mastering all of {prerequisite?.name ?? "Basic 100"}
+            </p>
+            {preStats && (
+              <p className="text-muted-foreground">
+                {prerequisite?.name} progress: {preStats.mastered} /{" "}
+                {preStats.total}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -75,29 +99,72 @@ export default function BookDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Primary actions */}
-      <div className="flex flex-col gap-2 sm:flex-row">
+      {/* Primary CTA: Today's Practice */}
+      <Button
+        asChild={canTest}
+        size="xl"
+        className="w-full flex-col gap-0.5 py-5"
+        disabled={!canTest}
+        title={
+          book.locked
+            ? "This book is locked"
+            : isEmpty
+              ? "Add words to start practicing"
+              : undefined
+        }
+      >
         {canTest ? (
-          <Button asChild size="lg" className="flex-1">
-            <Link href={`/books/${book.id}/test`}>
-              <Play className="fill-current" /> Start Test
-            </Link>
-          </Button>
+          <Link href={`/books/${book.id}/test?mode=today`}>
+            <span className="flex items-center gap-2">
+              <Play className="fill-current" /> Start Today&rsquo;s Practice
+            </span>
+            <span className="text-xs font-medium opacity-80">
+              {state.settings.questionsPerTest} questions · auto-selected
+            </span>
+          </Link>
         ) : (
-          <Button
-            size="lg"
-            className="flex-1"
-            disabled
-            title={
-              book.locked ? "This book is locked" : "Add words to start a test"
-            }
-          >
-            <Play className="fill-current" /> Start Test
-          </Button>
+          <span className="flex items-center gap-2">
+            <Play className="fill-current" /> Start Today&rsquo;s Practice
+          </span>
         )}
-        <Button asChild size="lg" variant="outline" className="flex-1">
+      </Button>
+
+      {/* Secondary CTA: Full Test */}
+      <Button
+        asChild={canTest}
+        size="lg"
+        variant="outline"
+        className="w-full"
+        disabled={!canTest}
+      >
+        {canTest ? (
+          <Link href={`/books/${book.id}/test?mode=full`}>
+            <ClipboardCheck /> Full Test · all {stats.total} words
+          </Link>
+        ) : (
+          <span className="flex items-center gap-2">
+            <ClipboardCheck /> Full Test
+          </span>
+        )}
+      </Button>
+
+      {/* Master collection */}
+      <Button asChild size="lg" variant="secondary" className="w-full">
+        <Link href={`/books/${book.id}/master`}>
+          <Trophy /> Master Words · {stats.mastered} / {stats.total}
+        </Link>
+      </Button>
+
+      {/* Manage & settings */}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button asChild size="lg" variant="ghost" className="flex-1">
           <Link href={`/books/${book.id}/words`}>
             <BookOpen /> Manage words
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="ghost" className="flex-1">
+          <Link href="/settings">
+            <Settings /> Settings
           </Link>
         </Button>
       </div>
