@@ -1,6 +1,9 @@
 import type { AppSettings, AppState, Book, Word } from "@/types";
 import type { ParsedEntry } from "@/services/vocabIO";
-import type { StateRepository } from "@/storage/repository";
+import type {
+  StorageRepository,
+  TestSessionRecord,
+} from "@/storage/repository";
 import { LocalStorageRepository } from "@/storage/localStorageRepository";
 import { createInitialState } from "@/storage/seed";
 import { migrateState } from "@/storage/migrate";
@@ -47,12 +50,15 @@ type Listener = () => void;
  * stable between changes.
  */
 export class VocabStore {
-  private readonly repo: StateRepository;
+  private repo: StorageRepository;
   private state: AppState;
   private listeners = new Set<Listener>();
   private hydrated = false;
+  private hydrating = false;
+  /** Guards against a stale (superseded) load overwriting a newer one. */
+  private loadToken = 0;
 
-  constructor(repo: StateRepository) {
+  constructor(repo: StorageRepository) {
     this.repo = repo;
     // Deterministic pre-hydration snapshot for SSR + first client paint.
     this.state = createInitialState();
@@ -71,32 +77,68 @@ export class VocabStore {
 
   isHydrated = (): boolean => this.hydrated;
 
-  /** Load persisted state on the client. Safe to call multiple times. */
-  hydrate = (): void => {
-    if (this.hydrated) return;
-    const loaded = this.repo.load();
-    if (loaded) {
-      // Upgrade any older schema (e.g. words without a `number`) on load, and
-      // apply the one-way unlock latch so a restored/complete state is
-      // consistent (never re-locks).
-      const migrated = migrateState(loaded);
-      this.state = { ...migrated, books: applyLocks(migrated.books, false) };
-      this.repo.save(this.state);
-    } else {
-      // First run — persist the seeded state.
-      this.repo.save(this.state);
-    }
+  /** Load persisted state from the active repository. Safe to call repeatedly. */
+  hydrate = async (): Promise<void> => {
+    if (this.hydrated || this.hydrating) return;
+    this.hydrating = true;
+    await this.load();
     this.hydrated = true;
+    this.hydrating = false;
     this.emit();
   };
+
+  private async load(): Promise<void> {
+    const token = ++this.loadToken;
+    const repo = this.repo;
+    let loaded: AppState | null = null;
+    try {
+      loaded = await repo.load();
+    } catch (err) {
+      console.error("Failed to load state", err);
+    }
+    // A newer load (e.g. a repository swap) started while we awaited — discard.
+    if (token !== this.loadToken) return;
+    if (loaded) {
+      // Apply the one-way unlock latch so a restored/complete state is
+      // consistent (never re-locks).
+      this.state = { ...loaded, books: applyLocks(loaded.books, false) };
+      void this.repo.save(this.state);
+    } else {
+      // First run for this backend — persist the seeded state.
+      this.state = createInitialState();
+      void this.repo.save(this.state);
+    }
+  }
+
+  /**
+   * Swap the storage backend (e.g. LocalStorage ↔ Supabase on login/logout)
+   * and reload from it. The `hydrated` flag stays true so the UI keeps
+   * rendering; only the data source changes.
+   */
+  async setRepository(repo: StorageRepository): Promise<void> {
+    this.repo = repo;
+    await this.load();
+    this.emit();
+  }
+
+  /** Replace the entire state (e.g. uploading local data to a fresh cloud account). */
+  async replaceAll(state: AppState): Promise<void> {
+    this.commit(state);
+  }
 
   private commit(next: AppState): void {
     // One-way unlock: any change that completes a prerequisite book opens its
     // dependents (e.g. Basic 100 fully mastered unlocks the Supplemental List).
+    // The in-memory state updates optimistically; persistence is async.
     const state = { ...next, books: applyLocks(next.books, false) };
     this.state = state;
-    this.repo.save(state);
     this.emit();
+    void this.repo.save(state);
+  }
+
+  /** Record a finished test in history (best-effort; ignored by no-op backends). */
+  recordSession(session: TestSessionRecord): void {
+    void this.repo.recordSession?.(session);
   }
 
   private emit(): void {
@@ -268,10 +310,17 @@ export class VocabStore {
 
   /** Wipe everything and reseed the two starter books. */
   clearAll(): void {
-    this.repo.clear();
-    this.state = createInitialState();
-    this.repo.save(this.state);
+    const seed = createInitialState();
+    this.state = seed;
     this.emit();
+    void (async () => {
+      try {
+        await this.repo.clear();
+        await this.repo.save(seed);
+      } catch (err) {
+        console.error("Failed to clear data", err);
+      }
+    })();
   }
 
   // --- Backup / restore ----------------------------------------------------

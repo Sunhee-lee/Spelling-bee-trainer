@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Check, Eye, Home, LayoutDashboard, RotateCcw, X } from "lucide-react";
@@ -69,6 +69,31 @@ function TestRunner() {
     () => grades.filter((g) => g === "correct").length,
     [grades]
   );
+
+  // Record finished scheduling runs (today / full) to test history, once.
+  const recorded = useRef(false);
+  useEffect(() => {
+    if (
+      finished &&
+      !recorded.current &&
+      book &&
+      questions &&
+      !isRetry &&
+      (mode === "today" || mode === "full")
+    ) {
+      recorded.current = true;
+      actions.recordSession({
+        bookId: book.id,
+        score,
+        correct: score,
+        wrong: total - score,
+        answers: questions.map((q, i) => ({
+          wordId: q.id,
+          correct: grades[i] === "correct",
+        })),
+      });
+    }
+  }, [finished, book, questions, isRetry, mode, score, total, grades, actions]);
 
   function grade(result: Grade) {
     if (!book || !current) return;
