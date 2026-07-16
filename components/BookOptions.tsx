@@ -6,6 +6,7 @@ import { Pencil, RotateCcw, Trash2 } from "lucide-react";
 
 import type { Book } from "@/types";
 import { useActions } from "@/store/useVocabStore";
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,6 +38,7 @@ interface BookOptionsProps {
 /** Rename, reset progress, and (for user-created books) delete. */
 export function BookOptions({ book }: BookOptionsProps) {
   const actions = useActions();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [renameOpen, setRenameOpen] = useState(false);
@@ -59,17 +61,17 @@ export function BookOptions({ book }: BookOptionsProps) {
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm">
-            <Pencil /> Rename
+            <Pencil /> {t("bookOptions.rename")}
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename book</DialogTitle>
-            <DialogDescription>Give this book a new name.</DialogDescription>
+            <DialogTitle>{t("bookOptions.renameTitle")}</DialogTitle>
+            <DialogDescription>{t("bookOptions.renameDesc")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleRename} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="book-name">Book name</Label>
+              <Label htmlFor="book-name">{t("settings.bookName")}</Label>
               <Input
                 id="book-name"
                 value={name}
@@ -83,10 +85,10 @@ export function BookOptions({ book }: BookOptionsProps) {
                 variant="outline"
                 onClick={() => setRenameOpen(false)}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={name.trim() === ""}>
-                Save
+                {t("common.save")}
               </Button>
             </DialogFooter>
           </form>
@@ -97,21 +99,20 @@ export function BookOptions({ book }: BookOptionsProps) {
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="outline" size="sm">
-            <RotateCcw /> Reset progress
+            <RotateCcw /> {t("bookOptions.resetProgress")}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset progress?</AlertDialogTitle>
+            <AlertDialogTitle>{t("bookOptions.resetTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              All words in “{book.name}” go back to the start. The words
-              themselves are kept.
+              {t("bookOptions.resetDesc", { book: book.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => actions.resetBookProgress(book.id)}>
-              Reset
+              {t("bookOptions.reset")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -126,18 +127,20 @@ export function BookOptions({ book }: BookOptionsProps) {
               size="sm"
               className="text-destructive hover:bg-destructive/10"
             >
-              <Trash2 /> Delete book
+              <Trash2 /> {t("bookOptions.deleteBook")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete “{book.name}”?</AlertDialogTitle>
+              <AlertDialogTitle>
+                {t("bookOptions.deleteTitle", { book: book.name })}
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                This permanently removes the book and all of its words.
+                {t("bookOptions.deleteDesc")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive text-destructive-foreground"
                 onClick={() => {
@@ -145,7 +148,7 @@ export function BookOptions({ book }: BookOptionsProps) {
                   router.push("/");
                 }}
               >
-                Delete
+                {t("common.delete")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

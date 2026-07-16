@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { Word } from "@/types";
 import { useActions } from "@/store/useVocabStore";
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +28,7 @@ interface WordFormDialogProps {
 /** Dialog for adding or editing a single vocabulary word. */
 export function WordFormDialog({ bookId, word, trigger }: WordFormDialogProps) {
   const actions = useActions();
+  const { t } = useTranslation();
   const isEdit = !!word;
 
   const [open, setOpen] = useState(false);
@@ -59,14 +61,14 @@ export function WordFormDialog({ bookId, word, trigger }: WordFormDialogProps) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit word" : "Add a word"}</DialogTitle>
-          <DialogDescription>
-            Enter the English word and its Korean meaning.
-          </DialogDescription>
+          <DialogTitle>
+            {isEdit ? t("words.editWord") : t("words.addWordTitle")}
+          </DialogTitle>
+          <DialogDescription>{t("words.formDesc")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="word-english">English word</Label>
+            <Label htmlFor="word-english">{t("words.english")}</Label>
             <Input
               id="word-english"
               value={english}
@@ -77,7 +79,7 @@ export function WordFormDialog({ bookId, word, trigger }: WordFormDialogProps) {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="word-meaning">Korean meaning</Label>
+            <Label htmlFor="word-meaning">{t("words.korean")}</Label>
             <Input
               id="word-meaning"
               value={meaning}
@@ -92,10 +94,10 @@ export function WordFormDialog({ bookId, word, trigger }: WordFormDialogProps) {
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              {isEdit ? "Save changes" : "Add word"}
+              {isEdit ? t("words.saveChanges") : t("words.addWord")}
             </Button>
           </DialogFooter>
         </form>

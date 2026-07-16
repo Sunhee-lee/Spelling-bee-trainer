@@ -13,6 +13,7 @@ import {
   buildTestWords,
   pickWordsByIds,
 } from "@/services/testSession";
+import { useTranslation, type TKey } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,10 @@ import { Progress } from "@/components/ui/progress";
 type Grade = "correct" | "wrong";
 type Mode = "today" | "full" | "master";
 
-const MODE_LABEL: Record<Mode, string> = {
-  today: "Today's Practice",
-  full: "Full Test",
-  master: "Master Check",
+const MODE_LABEL_KEY: Record<Mode, TKey> = {
+  today: "test.modeToday",
+  full: "test.modeFull",
+  master: "test.modeMaster",
 };
 
 function parseMode(value: string | null): Mode {
@@ -39,6 +40,7 @@ function TestRunner() {
 
   const { state, hydrated } = useAppState();
   const actions = useActions();
+  const { t } = useTranslation();
   const book = state.books.find((b) => b.id === params.bookId);
 
   const [questions, setQuestions] = useState<Word[] | null>(null);
@@ -133,9 +135,9 @@ function TestRunner() {
   if (!book) {
     return (
       <main className="mx-auto w-full max-w-xl px-4 py-8 sm:px-6">
-        <EmptyState emoji="🔍" title="Book not found">
+        <EmptyState emoji="🔍" title={t("common.bookNotFound")}>
           <Button asChild>
-            <Link href="/">Back to books</Link>
+            <Link href="/">{t("common.backToBooks")}</Link>
           </Button>
         </EmptyState>
       </main>
@@ -147,17 +149,19 @@ function TestRunner() {
       <main className="mx-auto w-full max-w-xl px-4 py-8 sm:px-6">
         <EmptyState
           emoji={book.locked ? "🔒" : "📖"}
-          title={book.locked ? "This book is locked" : "Nothing to practice"}
+          title={
+            book.locked ? t("test.lockedTitle") : t("test.nothingToPractice")
+          }
           description={
             book.locked
-              ? "Master all of Basic 100 to unlock this book."
+              ? t("test.lockedDesc")
               : mode === "master"
-                ? "No mastered words yet."
-                : "Add some words to this book first."
+                ? t("test.noMasteredDesc")
+                : t("test.addWordsFirst")
           }
         >
           <Button asChild>
-            <Link href={`/books/${book.id}`}>Back to book</Link>
+            <Link href={`/books/${book.id}`}>{t("common.backToBook")}</Link>
           </Button>
         </EmptyState>
       </main>
@@ -188,24 +192,24 @@ function TestRunner() {
           </div>
           <h1 className="text-2xl font-extrabold">
             {isRetry && allCorrect
-              ? "All corrected!"
+              ? t("test.allCorrected")
               : percent >= 80
-                ? "Amazing work!"
-                : "Great effort!"}
+                ? t("test.amazing")
+                : t("test.greatEffort")}
           </h1>
           <p className="text-5xl font-extrabold tabular-nums">
             {score}
             <span className="text-2xl text-muted-foreground"> / {total}</span>
           </p>
           <p className="text-sm font-semibold text-muted-foreground">
-            {percent}% accuracy
+            {t("test.accuracy", { percent })}
           </p>
           <div className="flex gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-4 py-1.5 font-semibold text-success">
-              <Check className="size-4" /> {score} correct
+              <Check className="size-4" /> {t("test.correctChip", { count: score })}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-4 py-1.5 font-semibold text-destructive">
-              <X className="size-4" /> {wrong} wrong
+              <X className="size-4" /> {t("test.wrongChip", { count: wrong })}
             </span>
           </div>
         </Card>
@@ -213,7 +217,7 @@ function TestRunner() {
         {newlyMastered.length > 0 && (
           <div className="rounded-3xl border-2 border-success/40 bg-success/10 px-5 py-4">
             <p className="text-lg font-extrabold text-success">
-              🏆 Newly Mastered ({newlyMastered.length})
+              {t("test.newlyMastered", { count: newlyMastered.length })}
             </p>
             <ul className="mt-2 flex flex-col gap-1">
               {newlyMastered.map((word) => (
@@ -231,7 +235,9 @@ function TestRunner() {
 
         {demoted.length > 0 && (
           <div className="rounded-2xl bg-muted px-4 py-3 text-sm">
-            <p className="font-bold">↩︎ Back to learning ({demoted.length})</p>
+            <p className="font-bold">
+              {t("test.backToLearning", { count: demoted.length })}
+            </p>
             <p className="text-muted-foreground">
               {demoted.map((w) => `${w.number}. ${w.word}`).join(", ")}
             </p>
@@ -241,18 +247,18 @@ function TestRunner() {
         <div className="flex flex-col gap-2">
           {wrong > 0 && (
             <Button size="lg" onClick={retryWrong}>
-              <RotateCcw /> Practice wrong words ({wrong})
+              <RotateCcw /> {t("test.practiceWrong", { count: wrong })}
             </Button>
           )}
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild size="lg" variant="outline" className="flex-1">
               <Link href={`/books/${book.id}`}>
-                <LayoutDashboard /> Finish
+                <LayoutDashboard /> {t("test.finish")}
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="flex-1">
               <Link href="/">
-                <Home /> Home
+                <Home /> {t("test.home")}
               </Link>
             </Button>
           </div>
@@ -264,7 +270,7 @@ function TestRunner() {
   // --- Active question -----------------------------------------------------
 
   const progress = (index / total) * 100;
-  const heading = isRetry ? "Wrong Words" : MODE_LABEL[mode];
+  const heading = isRetry ? t("test.modeWrong") : t(MODE_LABEL_KEY[mode]);
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -272,10 +278,10 @@ function TestRunner() {
 
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between text-sm font-semibold text-muted-foreground">
-          <span>
-            Question {index + 1} of {total}
+          <span>{t("test.questionOf", { current: index + 1, total })}</span>
+          <span className="tabular-nums">
+            {t("test.correctCount", { count: score })}
           </span>
-          <span className="tabular-nums">{score} correct</span>
         </div>
         <Progress value={progress} indicatorClassName="bg-grass" />
       </div>
@@ -283,7 +289,7 @@ function TestRunner() {
       {current && (
         <Card className="items-center gap-6 py-10 text-center">
           <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Meaning
+            {t("test.meaning")}
           </span>
           <p className="px-4 text-4xl font-extrabold leading-tight sm:text-5xl">
             {current.meaning}
@@ -292,7 +298,7 @@ function TestRunner() {
           {revealed ? (
             <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary px-6 py-4">
               <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                Answer
+                {t("test.answer")}
               </span>
               <p className="text-3xl font-extrabold text-primary sm:text-4xl">
                 <span className="text-muted-foreground">{current.number}. </span>
@@ -301,7 +307,7 @@ function TestRunner() {
             </div>
           ) : (
             <p className="max-w-xs text-sm text-muted-foreground">
-              Say the English word out loud, then spell it letter by letter.
+              {t("test.sayOutLoud")}
             </p>
           )}
         </Card>
@@ -310,15 +316,15 @@ function TestRunner() {
       {/* Controls */}
       {!revealed ? (
         <Button size="xl" className="w-full" onClick={() => setRevealed(true)}>
-          <Eye /> Show answer
+          <Eye /> {t("test.showAnswer")}
         </Button>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           <Button size="xl" variant="success" onClick={() => grade("correct")}>
-            <Check /> Correct
+            <Check /> {t("test.correct")}
           </Button>
           <Button size="xl" variant="destructive" onClick={() => grade("wrong")}>
-            <X /> Wrong
+            <X /> {t("test.wrong")}
           </Button>
         </div>
       )}

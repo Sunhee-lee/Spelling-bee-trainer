@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
 
 import { useActions } from "@/store/useVocabStore";
+import { useTranslation, type TKey } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -16,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type Feedback = { kind: "success" | "error"; message: string } | null;
+type Feedback = { kind: "success" | "error"; key: TKey } | null;
 
 /**
  * Full-data backup: export the entire app state as JSON and restore it later.
@@ -24,6 +25,7 @@ type Feedback = { kind: "success" | "error"; message: string } | null;
  */
 export function BackupRestore() {
   const actions = useActions();
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingJson, setPendingJson] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -40,7 +42,7 @@ export function BackupRestore() {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    setFeedback({ kind: "success", message: "Backup downloaded." });
+    setFeedback({ kind: "success", key: "backup.downloaded" });
   }
 
   async function handleFileChange(
@@ -53,7 +55,7 @@ export function BackupRestore() {
     try {
       setPendingJson(await file.text());
     } catch {
-      setFeedback({ kind: "error", message: "Could not read that file." });
+      setFeedback({ kind: "error", key: "backup.readFail" });
     }
   }
 
@@ -63,8 +65,8 @@ export function BackupRestore() {
     setPendingJson(null);
     setFeedback(
       ok
-        ? { kind: "success", message: "Backup restored." }
-        : { kind: "error", message: "That file is not a valid backup." }
+        ? { kind: "success", key: "backup.restored" }
+        : { kind: "error", key: "backup.invalid" }
     );
   }
 
@@ -72,10 +74,10 @@ export function BackupRestore() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={handleBackup}>
-          <Download /> Export backup (JSON)
+          <Download /> {t("backup.exportBackup")}
         </Button>
         <Button variant="outline" onClick={() => inputRef.current?.click()}>
-          <Upload /> Restore from backup
+          <Upload /> {t("backup.restore")}
         </Button>
         <input
           ref={inputRef}
@@ -94,7 +96,7 @@ export function BackupRestore() {
               : "text-sm font-semibold text-destructive"
           }
         >
-          {feedback.message}
+          {t(feedback.key)}
         </p>
       )}
 
@@ -106,16 +108,15 @@ export function BackupRestore() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Restore this backup?</AlertDialogTitle>
+            <AlertDialogTitle>{t("backup.restoreTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This replaces all current books, words, and progress on this
-              device with the contents of the file. This can’t be undone.
+              {t("backup.restoreDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmRestore}>
-              Restore
+              {t("backup.restoreAction")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

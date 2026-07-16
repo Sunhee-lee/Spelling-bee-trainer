@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS: AppState["settings"] = {
   questionsPerTest: 20,
   masterReviewRate: 0.1,
   shuffleQuestions: true,
+  language: "ko",
 };
 
 /**

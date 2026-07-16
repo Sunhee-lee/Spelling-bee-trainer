@@ -6,6 +6,7 @@ import { Trophy } from "lucide-react";
 
 import { useBook } from "@/store/useVocabStore";
 import { computeBookStats } from "@/services/stats";
+import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 export default function MasterCollectionPage() {
   const params = useParams<{ bookId: string }>();
   const { book, hydrated } = useBook(params.bookId);
+  const { t } = useTranslation();
 
   if (!hydrated) {
     return (
@@ -27,9 +29,9 @@ export default function MasterCollectionPage() {
   if (!book) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
-        <EmptyState emoji="🔍" title="Book not found">
+        <EmptyState emoji="🔍" title={t("common.bookNotFound")}>
           <Button asChild>
-            <Link href="/">Back to books</Link>
+            <Link href="/">{t("common.backToBooks")}</Link>
           </Button>
         </EmptyState>
       </main>
@@ -44,33 +46,50 @@ export default function MasterCollectionPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <AppHeader
-        title="Master Words"
+        title={t("master.title")}
         emoji="🏆"
         backHref={`/books/${book.id}`}
         subtitle={book.name}
       />
 
-      <Card>
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex items-center justify-between text-sm font-semibold">
-            <span className="text-muted-foreground">Mastered</span>
-            <span className="tabular-nums">
-              {stats.mastered} / {stats.total} · {stats.progress}%
-            </span>
-          </div>
-          <Progress value={stats.progress} indicatorClassName="bg-bee" />
-        </CardContent>
-      </Card>
+      {/* Only show progress when the book actually has words (avoid 0 / 0 · 0%). */}
+      {stats.total > 0 && (
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center justify-between text-sm font-semibold">
+              <span className="text-muted-foreground">
+                {t("progress.mastered")}
+              </span>
+              <span className="tabular-nums">
+                {stats.mastered} / {stats.total}
+                {stats.mastered > 0 ? ` · ${stats.progress}%` : ""}
+              </span>
+            </div>
+            <Progress value={stats.progress} indicatorClassName="bg-bee" />
+          </CardContent>
+        </Card>
+      )}
 
       {mastered.length === 0 ? (
         <EmptyState
           emoji="🌱"
-          title="No master words yet"
-          description="Answer a word correctly 4 times in a row to master it."
+          title={t("master.noMasterYet")}
+          description={t("master.noMasterDesc")}
         >
-          <Button asChild>
-            <Link href={`/books/${book.id}`}>Back to book</Link>
-          </Button>
+          <div className="flex flex-col items-center gap-3">
+            {!book.locked && book.words.length > 0 && (
+              <Button asChild size="lg">
+                <Link href={`/books/${book.id}/test?mode=today`}>
+                  {t("book.todayPractice")}
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant="ghost" size="sm">
+              <Link href={`/books/${book.id}`}>
+                {t("master.backToBook", { book: book.name })}
+              </Link>
+            </Button>
+          </div>
         </EmptyState>
       ) : (
         <>
@@ -96,7 +115,7 @@ export default function MasterCollectionPage() {
           {/* Optional maintenance check — not a primary CTA. */}
           <Button asChild variant="outline" className="w-full">
             <Link href={`/books/${book.id}/test?mode=master`}>
-              Review master words
+              {t("master.reviewMaster")}
             </Link>
           </Button>
         </>

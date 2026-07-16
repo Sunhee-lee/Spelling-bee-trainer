@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 interface AppHeaderProps {
   title: string;
@@ -23,12 +26,13 @@ export function AppHeader({
   action,
   className,
 }: AppHeaderProps) {
+  const { t } = useTranslation();
   return (
     <header className={cn("flex items-center gap-3", className)}>
       {backHref && (
         <Link
           href={backHref}
-          aria-label="Go back"
+          aria-label={t("common.back")}
           className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-border bg-card text-foreground shadow-sm transition-colors hover:bg-accent focus-visible:ring-4 focus-visible:ring-ring/40 outline-none"
         >
           <ArrowLeft className="size-5" />

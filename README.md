@@ -6,7 +6,8 @@ taps ⭕ or ❌. A test-based spaced-repetition system schedules reviews and
 tracks mastery.
 
 Built with Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui, and
-Lucide icons.
+Lucide icons. The UI is fully bilingual — **Korean (default)** and English,
+switchable in Settings and synced with your account.
 
 ## Getting started
 
@@ -49,6 +50,9 @@ npm run lint     # ESLint
   `SupabaseRepository` implementations, plus schema migration
 - `store/` — reactive store (`useSyncExternalStore`) with a swappable backend
 - `auth/` — Supabase `AuthProvider` (session + repository switching)
+- `locales/` — `ko.ts` / `en.ts` translations; `lib/i18n.ts` — `useTranslation`
+- `lib/admin.ts` — admin allow-list; `app/admin` + `app/api/admin/stats` —
+  admin-only dashboard (server-verified, service-role reads)
 - `components/`, `app/` — UI (App Router)
 - `supabase/migrations/` — SQL schema + RLS policies
 

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, ChevronRight, Lock, Settings, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, Lock, Settings } from "lucide-react";
 
 import type { Book } from "@/types";
 import { useAppState } from "@/store/useVocabStore";
 import { computeBookStats, isBookComplete } from "@/services/stats";
+import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { BookDashboardPanel } from "@/components/BookDashboardPanel";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ function SecondaryBookCard({
   book: Book;
   prerequisite?: Book;
 }) {
+  const { t } = useTranslation();
   const stats = computeBookStats(book);
   const preStats = prerequisite ? computeBookStats(prerequisite) : undefined;
 
@@ -34,12 +36,15 @@ function SecondaryBookCard({
             </p>
             {book.locked ? (
               <p className="text-sm text-muted-foreground">
-                Unlock by mastering all of {prerequisite?.name ?? "Basic 100"}
+                {t("book.lockedTitle", {
+                  prereq: prerequisite?.name ?? "Basic 100",
+                })}
                 {preStats ? ` · ${preStats.mastered} / ${preStats.total}` : ""}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Master {stats.mastered} / {stats.total} · {stats.progress}%
+                {t("progress.master")} {stats.mastered} / {stats.total} ·{" "}
+                {stats.progress}%
               </p>
             )}
           </div>
@@ -52,12 +57,11 @@ function SecondaryBookCard({
 
 export default function HomePage() {
   const { state, hydrated } = useAppState();
+  const { t } = useTranslation();
 
   const primary = state.books[0];
   const others = state.books.slice(1);
 
-  // Celebrate when a prerequisite book is fully mastered and its dependent
-  // (e.g. the Supplemental List) has unlocked.
   const unlocked = hydrated
     ? state.books.find((b) => {
         if (!b.unlockAfterBookId || b.locked) return false;
@@ -73,10 +77,10 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <AppHeader
-        title="Spelling Bee Trainer"
+        title={t("common.appName")}
         emoji="🐝"
         action={
-          <Button asChild variant="outline" size="icon" aria-label="Settings">
+          <Button asChild variant="outline" size="icon" aria-label={t("common.settings")}>
             <Link href="/settings">
               <Settings />
             </Link>
@@ -94,13 +98,14 @@ export default function HomePage() {
                 🏆
               </span>
               <p className="text-sm font-semibold sm:text-base">
-                {prerequisiteOf(unlocked)?.name} complete! 🔓 {unlocked.name} is
-                now unlocked.
+                {t("home.unlockedBanner", {
+                  prereq: prerequisiteOf(unlocked)?.name ?? "",
+                  book: unlocked.name,
+                })}
               </p>
             </div>
           )}
 
-          {/* Primary book dashboard */}
           {primary && (
             <section className="flex flex-col gap-4">
               <h2 className="text-2xl font-extrabold">{primary.name}</h2>
@@ -108,26 +113,13 @@ export default function HomePage() {
                 book={primary}
                 questionsPerTest={state.settings.questionsPerTest}
               />
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button asChild variant="ghost" className="flex-1">
-                  <Link href={`/books/${primary.id}/words`}>
-                    <BookOpen /> Manage words
-                  </Link>
-                </Button>
-                <Button asChild variant="ghost" className="flex-1">
-                  <Link href={`/books/${primary.id}`}>
-                    <SlidersHorizontal /> Book options
-                  </Link>
-                </Button>
-              </div>
             </section>
           )}
 
-          {/* Secondary books */}
           {others.length > 0 && (
             <section className="flex flex-col gap-3 border-t border-border pt-6">
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                More books
+                {t("home.moreBooks")}
               </h2>
               {others.map((book) => (
                 <SecondaryBookCard
@@ -140,10 +132,6 @@ export default function HomePage() {
           )}
         </>
       )}
-
-      <p className="text-center text-sm text-muted-foreground">
-        Everything is saved on this device. 🍯
-      </p>
     </main>
   );
 }

@@ -1,10 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, RotateCcw, Shuffle, Trash2 } from "lucide-react";
+import {
+  ChevronRight,
+  Minus,
+  Plus,
+  RotateCcw,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 
+import type { Language } from "@/types";
 import { useActions, useAppState } from "@/store/useVocabStore";
+import { useTranslation } from "@/lib/i18n";
+import { useAuth } from "@/auth/AuthProvider";
+import { isAdminEmail } from "@/lib/admin";
 import { AppHeader } from "@/components/AppHeader";
 import { AccountSection } from "@/components/AccountSection";
 import { BackupRestore } from "@/components/BackupRestore";
@@ -22,6 +34,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,8 +48,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const APP_VERSION = "1.0.0";
+const QPT_MIN = 5;
+const QPT_MAX = 50;
+const QPT_STEP = 5;
+
 function NewBookDialog() {
   const actions = useActions();
+  const { t } = useTranslation();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -53,37 +73,30 @@ function NewBookDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm">
-          <Plus /> New book
+          <Plus /> {t("settings.newBook")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New vocabulary book</DialogTitle>
-          <DialogDescription>
-            Create a book, then add words to it.
-          </DialogDescription>
+          <DialogTitle>{t("settings.newBookTitle")}</DialogTitle>
+          <DialogDescription>{t("settings.newBookDesc")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="new-book-name">Book name</Label>
+            <Label htmlFor="new-book-name">{t("settings.bookName")}</Label>
             <Input
               id="new-book-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Week 1 Words"
               autoFocus
             />
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
-              Cancel
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={name.trim() === ""}>
-              Create
+              {t("common.create")}
             </Button>
           </DialogFooter>
         </form>
@@ -95,22 +108,25 @@ function NewBookDialog() {
 export default function SettingsPage() {
   const { state, hydrated } = useAppState();
   const actions = useActions();
+  const { t } = useTranslation();
+  const { user, configured } = useAuth();
   const { settings } = state;
 
-  function setQuestionsPerTest(value: number) {
-    if (Number.isNaN(value)) return;
-    actions.updateSettings({ questionsPerTest: Math.max(1, Math.round(value)) });
+  const showAdmin = configured && isAdminEmail(user?.email);
+  const masterPercent = Math.round(settings.masterReviewRate * 100);
+
+  function bumpQuestions(delta: number) {
+    const next = Math.min(QPT_MAX, Math.max(QPT_MIN, settings.questionsPerTest + delta));
+    actions.updateSettings({ questionsPerTest: next });
   }
 
-  function setMasterReviewPercent(value: number) {
-    if (Number.isNaN(value)) return;
-    const clamped = Math.min(100, Math.max(0, Math.round(value)));
-    actions.updateSettings({ masterReviewRate: clamped / 100 });
+  function setLanguage(language: Language) {
+    actions.updateSettings({ language });
   }
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <AppHeader title="Settings" emoji="⚙️" backHref="/" />
+      <AppHeader title={t("settings.title")} emoji="⚙️" backHref="/" />
 
       {!hydrated ? (
         <Card className="h-48 animate-pulse bg-muted/60" />
@@ -122,109 +138,94 @@ export default function SettingsPage() {
           {/* Vocabulary Books */}
           <Card>
             <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>Vocabulary books</CardTitle>
+              <CardTitle>{t("settings.vocabularyBooks")}</CardTitle>
               <NewBookDialog />
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
+            <CardContent className="flex flex-col gap-2">
               {state.books.map((book) => (
                 <BookSettingsRow key={book.id} book={book} />
               ))}
-              <p className="px-1 text-xs text-muted-foreground">
-                Reset progress, rename, and delete live inside each book’s
-                Manage page.
-              </p>
             </CardContent>
           </Card>
 
           {/* Test Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>Test settings</CardTitle>
+              <CardTitle>{t("settings.testSettings")}</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+            <CardContent className="flex flex-col gap-6">
+              {/* Questions per test — stepper */}
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <Label htmlFor="qpt">Questions per test</Label>
+                  <Label>{t("settings.questionsPerTest")}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Up to this many words per test.
+                    {t("settings.questionsPerTestDesc")}
                   </p>
                 </div>
-                <Input
-                  id="qpt"
-                  type="number"
-                  min={1}
-                  inputMode="numeric"
-                  value={settings.questionsPerTest}
-                  onChange={(e) => setQuestionsPerTest(e.target.valueAsNumber)}
-                  className="w-24 text-center"
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="-"
+                    onClick={() => bumpQuestions(-QPT_STEP)}
+                    disabled={settings.questionsPerTest <= QPT_MIN}
+                  >
+                    <Minus />
+                  </Button>
+                  <span className="w-24 text-center text-sm font-bold tabular-nums">
+                    {t("settings.questionsUnit", {
+                      count: settings.questionsPerTest,
+                    })}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="+"
+                    onClick={() => bumpQuestions(QPT_STEP)}
+                    disabled={settings.questionsPerTest >= QPT_MAX}
+                  >
+                    <Plus />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Shuffle — switch */}
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label htmlFor="shuffle">{t("settings.shuffle")}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t("settings.shuffleDesc")}
+                  </p>
+                </div>
+                <Switch
+                  id="shuffle"
+                  checked={settings.shuffleQuestions}
+                  onCheckedChange={(checked) =>
+                    actions.updateSettings({ shuffleQuestions: checked })
+                  }
                 />
               </div>
 
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <Label className="flex items-center gap-2">
-                    <Shuffle className="size-4" /> Shuffle questions
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Randomize the order each test.
-                  </p>
-                </div>
-                <div className="flex rounded-full border-2 border-border p-1">
-                  <button
-                    type="button"
-                    aria-pressed={settings.shuffleQuestions}
-                    onClick={() =>
-                      actions.updateSettings({ shuffleQuestions: true })
-                    }
-                    className={`rounded-full px-4 py-1 text-sm font-semibold transition-colors ${
-                      settings.shuffleQuestions
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    On
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={!settings.shuffleQuestions}
-                    onClick={() =>
-                      actions.updateSettings({ shuffleQuestions: false })
-                    }
-                    className={`rounded-full px-4 py-1 text-sm font-semibold transition-colors ${
-                      !settings.shuffleQuestions
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    Off
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <Label htmlFor="mrr">Master review rate</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Share of mastered words mixed in (used by SRS in Phase 2).
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Input
-                    id="mrr"
-                    type="number"
-                    min={0}
-                    max={100}
-                    inputMode="numeric"
-                    value={Math.round(settings.masterReviewRate * 100)}
-                    onChange={(e) =>
-                      setMasterReviewPercent(e.target.valueAsNumber)
-                    }
-                    className="w-20 text-center"
-                  />
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    %
+              {/* Master review rate — slider */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <Label>{t("settings.masterReviewRate")}</Label>
+                  <span className="text-sm font-bold tabular-nums">
+                    {masterPercent}%
                   </span>
                 </div>
+                <p className="-mt-2 text-sm text-muted-foreground">
+                  {t("settings.masterReviewRateDesc")}
+                </p>
+                <Slider
+                  value={[masterPercent]}
+                  min={0}
+                  max={100}
+                  step={5}
+                  onValueChange={([v]) =>
+                    actions.updateSettings({ masterReviewRate: v / 100 })
+                  }
+                />
               </div>
             </CardContent>
           </Card>
@@ -232,44 +233,91 @@ export default function SettingsPage() {
           {/* Backup / Restore */}
           <Card>
             <CardHeader>
-              <CardTitle>Backup &amp; restore</CardTitle>
+              <CardTitle>{t("settings.backupRestore")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
               <p className="text-sm text-muted-foreground">
-                Save all books, words, and progress to a file, or restore from
-                one.
+                {t("settings.backupDesc")}
               </p>
               <BackupRestore />
             </CardContent>
           </Card>
 
-          {/* Data Management */}
+          {/* Language */}
           <Card>
             <CardHeader>
-              <CardTitle>Data management</CardTitle>
+              <CardTitle>{t("settings.language")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                {(["ko", "en"] as const).map((lang) => (
+                  <Button
+                    key={lang}
+                    variant={settings.language === lang ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setLanguage(lang)}
+                    aria-pressed={settings.language === lang}
+                  >
+                    {lang === "ko"
+                      ? t("settings.languageKo")
+                      : t("settings.languageEn")}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Admin (admins only) */}
+          {showAdmin && (
+            <Card>
+              <CardContent className="py-4">
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-3 font-semibold"
+                >
+                  <ShieldCheck className="size-5 text-primary" />
+                  <span className="flex-1">{t("settings.admin")}</span>
+                  <ChevronRight className="size-5 text-muted-foreground" />
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Danger Zone */}
+          <Card className="border-2 border-destructive/30">
+            <CardHeader>
+              <CardTitle className="text-destructive">
+                {t("settings.dangerZone")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              {/* Clear learning progress (keeps vocabulary) */}
+              <p className="text-sm text-muted-foreground">
+                {t("settings.dangerZoneDesc")}
+              </p>
+
+              {/* Reset all learning progress */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline">
-                    <RotateCcw /> Clear all learning progress
+                  <Button
+                    variant="outline"
+                    className="border-destructive/40 text-destructive hover:bg-destructive/10"
+                  >
+                    <RotateCcw /> {t("dataManagement.clearProgress")}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>
-                      Clear all learning progress?
+                      {t("dataManagement.clearProgressTitle")}
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Resets test numbers, master status, levels, and streaks
-                      for every book. Your vocabulary words are kept.
+                      {t("dataManagement.clearProgressDesc")}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                     <AlertDialogAction onClick={() => actions.resetAllProgress()}>
-                      Reset progress
+                      {t("bookOptions.reset")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -280,27 +328,27 @@ export default function SettingsPage() {
                 <AlertDialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="text-destructive hover:bg-destructive/10"
+                    className="border-destructive/40 text-destructive hover:bg-destructive/10"
                   >
-                    <Trash2 /> Clear everything
+                    <Trash2 /> {t("dataManagement.clearEverything")}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Clear everything?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      {t("dataManagement.clearEverythingTitle")}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Deletes every book and word on this device and starts
-                      fresh with Basic 100 and the Supplemental List. This can’t
-                      be undone.
+                      {t("dataManagement.clearEverythingDesc")}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-destructive text-destructive-foreground"
                       onClick={() => actions.clearAll()}
                     >
-                      Clear everything
+                      {t("dataManagement.clearEverything")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -311,18 +359,23 @@ export default function SettingsPage() {
           {/* About */}
           <Card>
             <CardHeader>
-              <CardTitle>About</CardTitle>
+              <CardTitle>{t("settings.about")}</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-1 text-sm text-muted-foreground">
+            <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
               <p className="font-semibold text-foreground">
-                Spelling Bee Trainer 🐝
+                {t("settings.aboutName")}
               </p>
-              <p>
-                A friendly spelling practice app for young learners. The teacher
-                reads the meaning, the student says and spells the word, and a
-                grown-up taps ⭕ or ❌.
-              </p>
-              <p>Saved locally on this device.</p>
+              <p>{t("settings.aboutBody")}</p>
+              <div className="flex items-center justify-between border-t border-border pt-2">
+                <span>{t("settings.version")}</span>
+                <span className="font-semibold tabular-nums">{APP_VERSION}</span>
+              </div>
+              <Link
+                href="/privacy"
+                className="font-semibold text-primary underline"
+              >
+                {t("settings.privacyPolicy")}
+              </Link>
             </CardContent>
           </Card>
         </>

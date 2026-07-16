@@ -51,6 +51,9 @@ export interface Book {
   createdAt: number;
 }
 
+/** Supported UI languages. */
+export type Language = "ko" | "en";
+
 /** User-configurable test behaviour. UI for these lands in Phase 2/3. */
 export interface AppSettings {
   /** Target number of questions per test. */
@@ -59,6 +62,8 @@ export interface AppSettings {
   masterReviewRate: number;
   /** Whether questions are shuffled. */
   shuffleQuestions: boolean;
+  /** UI language. Defaults to Korean. */
+  language: Language;
 }
 
 /** The complete persisted application state. */

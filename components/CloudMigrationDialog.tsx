@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CloudUpload, Sparkles } from "lucide-react";
 
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -29,6 +30,7 @@ export function CloudMigrationDialog({
   onUpload,
   onStartFresh,
 }: CloudMigrationDialogProps) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   async function run(action: () => Promise<void>) {
@@ -44,22 +46,19 @@ export function CloudMigrationDialog({
     <AlertDialog open={open}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Found progress on this device</AlertDialogTitle>
-          <AlertDialogDescription>
-            We found existing learning progress saved on this device. Would you
-            like to upload it to your cloud account?
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t("migration.title")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("migration.body")}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="sm:flex-col sm:items-stretch sm:gap-2">
           <Button disabled={busy} onClick={() => run(onUpload)}>
-            <CloudUpload /> Upload existing progress
+            <CloudUpload /> {t("migration.upload")}
           </Button>
           <Button
             variant="outline"
             disabled={busy}
             onClick={() => run(onStartFresh)}
           >
-            <Sparkles /> Start fresh
+            <Sparkles /> {t("migration.startFresh")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

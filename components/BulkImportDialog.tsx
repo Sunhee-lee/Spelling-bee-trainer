@@ -7,6 +7,7 @@ import type { Book } from "@/types";
 import { useActions } from "@/store/useVocabStore";
 import type { ImportStrategy, ImportSummary } from "@/store/store";
 import { parseImportText, type ParsedEntry } from "@/services/vocabIO";
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,6 +39,7 @@ interface BulkImportDialogProps {
 /** Paste-to-import dialog with duplicate handling and a result summary. */
 export function BulkImportDialog({ book, trigger }: BulkImportDialogProps) {
   const actions = useActions();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("input");
   const [text, setText] = useState("");
@@ -99,16 +101,16 @@ export function BulkImportDialog({ book, trigger }: BulkImportDialogProps) {
         {step === "input" && (
           <>
             <DialogHeader>
-              <DialogTitle>Bulk import</DialogTitle>
+              <DialogTitle>{t("import.title")}</DialogTitle>
               <DialogDescription>
-                One word per line, as{" "}
-                <span className="font-semibold">number,english,korean</span> or{" "}
-                <span className="font-semibold">english,korean</span>. Missing
-                numbers are assigned automatically; empty lines are ignored.
+                {t("import.desc", {
+                  formatA: "number,english,korean",
+                  formatB: "english,korean",
+                })}
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="bulk-text">Words</Label>
+              <Label htmlFor="bulk-text">{t("import.wordsLabel")}</Label>
               <Textarea
                 id="bulk-text"
                 value={text}
@@ -121,10 +123,10 @@ export function BulkImportDialog({ book, trigger }: BulkImportDialogProps) {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button onClick={handleContinue} disabled={text.trim() === ""}>
-                <Upload /> Continue
+                <Upload /> {t("import.continue")}
               </Button>
             </DialogFooter>
           </>
@@ -133,26 +135,25 @@ export function BulkImportDialog({ book, trigger }: BulkImportDialogProps) {
         {step === "confirm" && preview && (
           <>
             <DialogHeader>
-              <DialogTitle>Review import</DialogTitle>
+              <DialogTitle>{t("import.reviewTitle")}</DialogTitle>
               <DialogDescription>
-                Found {parsedCount} valid{" "}
-                {parsedCount === 1 ? "entry" : "entries"} to import.
+                {t("import.reviewDesc", { count: parsedCount })}
               </DialogDescription>
             </DialogHeader>
             <ul className="flex flex-col gap-2 text-sm">
               <li className="flex items-center justify-between rounded-2xl bg-muted/70 px-4 py-2.5">
-                <span>New words</span>
+                <span>{t("import.newWords")}</span>
                 <span className="font-bold tabular-nums">{newCount}</span>
               </li>
               <li className="flex items-center justify-between rounded-2xl bg-muted/70 px-4 py-2.5">
-                <span>Duplicate words</span>
+                <span>{t("import.duplicates")}</span>
                 <span className="font-bold tabular-nums">
                   {preview.duplicates}
                 </span>
               </li>
               {preview.invalid > 0 && (
                 <li className="flex items-center justify-between rounded-2xl bg-muted/70 px-4 py-2.5 text-muted-foreground">
-                  <span>Skipped invalid lines</span>
+                  <span>{t("import.invalidLines")}</span>
                   <span className="font-bold tabular-nums">
                     {preview.invalid}
                   </span>
@@ -163,33 +164,33 @@ export function BulkImportDialog({ book, trigger }: BulkImportDialogProps) {
             {preview.duplicates > 0 ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Some words already exist. What should happen to duplicates?
+                  {t("import.dupQuestion")}
                 </p>
                 <DialogFooter className="sm:flex-col sm:items-stretch sm:gap-2">
                   <Button onClick={() => runImport("skip")}>
-                    Skip duplicates
+                    {t("import.skip")}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => runImport("replace")}
                   >
-                    Replace existing words
+                    {t("import.replace")}
                   </Button>
                   <Button variant="ghost" onClick={() => setStep("input")}>
-                    Back
+                    {t("common.back")}
                   </Button>
                 </DialogFooter>
               </>
             ) : (
               <DialogFooter>
                 <Button variant="outline" onClick={() => setStep("input")}>
-                  Back
+                  {t("common.back")}
                 </Button>
                 <Button
                   onClick={() => runImport("skip")}
                   disabled={newCount === 0}
                 >
-                  Import {newCount} {newCount === 1 ? "word" : "words"}
+                  {t("import.importN", { count: newCount })}
                 </Button>
               </DialogFooter>
             )}
@@ -200,28 +201,27 @@ export function BulkImportDialog({ book, trigger }: BulkImportDialogProps) {
           <>
             <DialogHeader className="items-center text-center">
               <CheckCircle2 className="size-12 text-success" />
-              <DialogTitle>Import complete</DialogTitle>
+              <DialogTitle>{t("import.completeTitle")}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-1.5 text-center text-base">
               <p className="font-semibold">
-                Imported {summary.imported}{" "}
-                {summary.imported === 1 ? "word" : "words"}
+                {t("import.importedN", { count: summary.imported })}
               </p>
               {summary.replaced > 0 && (
                 <p className="text-muted-foreground">
-                  Replaced {summary.replaced}{" "}
-                  {summary.replaced === 1 ? "word" : "words"}
+                  {t("import.replacedN", { count: summary.replaced })}
                 </p>
               )}
               {summary.skipped > 0 && (
                 <p className="text-muted-foreground">
-                  Skipped {summary.skipped} duplicate{" "}
-                  {summary.skipped === 1 ? "word" : "words"}
+                  {t("import.skippedN", { count: summary.skipped })}
                 </p>
               )}
             </div>
             <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)}>Done</Button>
+              <Button onClick={() => handleOpenChange(false)}>
+                {t("common.done")}
+              </Button>
             </DialogFooter>
           </>
         )}
