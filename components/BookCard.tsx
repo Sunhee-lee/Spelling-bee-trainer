@@ -48,6 +48,7 @@ export function BookCard({ book, accent = "bee" }: BookCardProps) {
   const colors = ACCENTS[accent];
   const isEmpty = stats.total === 0;
   const canTest = !book.locked && !isEmpty;
+  const isComplete = stats.total > 0 && stats.mastered === stats.total;
 
   return (
     <Card className="gap-4 overflow-hidden">
@@ -64,6 +65,10 @@ export function BookCard({ book, accent = "bee" }: BookCardProps) {
           {book.locked ? (
             <Badge variant="muted" className="gap-1">
               <Lock className="size-3.5" /> Locked
+            </Badge>
+          ) : isComplete ? (
+            <Badge variant="success" className="gap-1">
+              <Trophy className="size-3.5" /> Complete!
             </Badge>
           ) : (
             <Badge variant="success" className="gap-1">

@@ -13,8 +13,48 @@ import { createId } from "@/services/id";
  */
 export const REVIEW_INTERVALS = [0, 1, 2, 4, 8, 16] as const;
 
+/** Highest valid level (last index into {@link REVIEW_INTERVALS}). */
+export const MAX_LEVEL = REVIEW_INTERVALS.length - 1;
+
 /** Consecutive correct answers required for a word to become mastered. */
 export const MASTER_THRESHOLD = 4;
+
+export type Grade = "correct" | "wrong";
+
+/**
+ * Apply a grade to a word and return the updated word (pure — no mutation).
+ *
+ * Correct: streak +1, level +1 (capped), scheduled `interval[level]` tests
+ * ahead, and mastered once the streak reaches {@link MASTER_THRESHOLD}.
+ *
+ * Wrong: streak and level reset, mastery cleared, and the word becomes due
+ * immediately (nextReviewTest = currentTest) so it returns to the queue.
+ */
+export function gradeWord(
+  word: Word,
+  currentTest: number,
+  grade: Grade
+): Word {
+  if (grade === "wrong") {
+    return {
+      ...word,
+      consecutiveCorrect: 0,
+      mastered: false,
+      level: 0,
+      nextReviewTest: currentTest,
+    };
+  }
+
+  const consecutiveCorrect = word.consecutiveCorrect + 1;
+  const level = Math.min(word.level + 1, MAX_LEVEL);
+  return {
+    ...word,
+    consecutiveCorrect,
+    level,
+    mastered: word.mastered || consecutiveCorrect >= MASTER_THRESHOLD,
+    nextReviewTest: currentTest + REVIEW_INTERVALS[level],
+  };
+}
 
 /**
  * Create a fresh word with default SRS state.
