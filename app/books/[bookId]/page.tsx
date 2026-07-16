@@ -102,9 +102,11 @@ export default function BookManagePage() {
       ) : (
         <Card className="overflow-hidden py-0">
           <ul className="divide-y divide-border">
-            {book.words.map((word) => (
-              <WordRow key={word.id} bookId={book.id} word={word} />
-            ))}
+            {[...book.words]
+              .sort((a, b) => a.number - b.number)
+              .map((word) => (
+                <WordRow key={word.id} bookId={book.id} word={word} />
+              ))}
           </ul>
         </Card>
       )}

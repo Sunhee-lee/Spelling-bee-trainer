@@ -11,17 +11,46 @@ function shuffle<T>(items: readonly T[]): T[] {
 }
 
 /**
- * Build the list of words for a test.
+ * Build the list of words for a test, by priority:
+ *   1. Review  — not mastered and due now (nextReviewTest <= currentTest)
+ *   2. Learning — not mastered and not yet due
+ *   3. Master check — a ~`masterReviewRate` sample of mastered words, mixed in
+ *      so they aren't forgotten (mastered words are otherwise excluded).
  *
- * Phase 1: a simple pool of the book's words, optionally shuffled and capped
- * at `questionsPerTest`. The priority queue (review words, then learning words,
- * then a ~10% sample of mastered words) is Phase 2 — this function is the seam
- * where that logic will slot in.
+ * The test is capped at `questionsPerTest`. When `shuffleQuestions` is on,
+ * each group is shuffled and the final order is shuffled too; otherwise words
+ * keep a stable order (by number) and groups stay in priority order.
  */
 export function buildTestWords(book: Book, settings: AppSettings): Word[] {
-  const pool = settings.shuffleQuestions ? shuffle(book.words) : [...book.words];
-  const cap = settings.questionsPerTest;
-  return cap > 0 ? pool.slice(0, cap) : pool;
+  const { questionsPerTest, masterReviewRate, shuffleQuestions } = settings;
+
+  const order = (words: Word[]): Word[] =>
+    shuffleQuestions
+      ? shuffle(words)
+      : [...words].sort((a, b) => a.number - b.number);
+
+  const notMastered = book.words.filter((w) => !w.mastered);
+  const mastered = book.words.filter((w) => w.mastered);
+
+  const due = order(notMastered.filter((w) => w.nextReviewTest <= book.currentTest));
+  const notDue = order(notMastered.filter((w) => w.nextReviewTest > book.currentTest));
+
+  const total = questionsPerTest > 0 ? questionsPerTest : book.words.length;
+
+  // Reserve ~masterReviewRate of the test for master-check words.
+  const masterSlots = Math.min(
+    Math.round(total * masterReviewRate),
+    mastered.length
+  );
+  const nonMasterNeeded = Math.max(0, total - masterSlots);
+
+  const nonMasterPicked = [...due, ...notDue].slice(0, nonMasterNeeded);
+  // Any slots the non-mastered pool couldn't fill go to more master words.
+  const masterNeeded = total - nonMasterPicked.length;
+  const masterPicked = order(mastered).slice(0, masterNeeded);
+
+  const questions = [...nonMasterPicked, ...masterPicked];
+  return shuffleQuestions ? shuffle(questions) : questions;
 }
 
 /** Wrap words as ungraded test questions. */

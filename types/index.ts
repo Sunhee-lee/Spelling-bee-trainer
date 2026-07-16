@@ -9,6 +9,12 @@
 /** A single vocabulary entry. */
 export interface Word {
   id: string;
+  /**
+   * The word's position on the original (printed) vocabulary sheet, shown
+   * throughout the app so parents can match it to paper. Auto-assigned when
+   * imported without an explicit number.
+   */
+  number: number;
   /** The English word, e.g. "journey". */
   word: string;
   /** The Korean meaning, e.g. "여행". */

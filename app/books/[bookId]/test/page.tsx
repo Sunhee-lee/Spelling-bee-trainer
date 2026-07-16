@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { Check, Eye, RotateCcw, X } from "lucide-react";
 
 import type { Word } from "@/types";
-import { useAppState } from "@/store/useVocabStore";
+import { useActions, useAppState } from "@/store/useVocabStore";
 import { buildTestWords } from "@/services/testSession";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
@@ -19,6 +19,7 @@ type Grade = "correct" | "wrong";
 export default function TestPage() {
   const params = useParams<{ bookId: string }>();
   const { state, hydrated } = useAppState();
+  const actions = useActions();
   const book = state.books.find((b) => b.id === params.bookId);
 
   const [questions, setQuestions] = useState<Word[] | null>(null);
@@ -43,8 +44,11 @@ export default function TestPage() {
   );
 
   function grade(result: Grade) {
-    // Phase 1: tally the score only. SRS updates (level, mastery,
-    // nextReviewTest) are Phase 2.
+    if (!book || !current) return;
+    // Apply the SRS transition for this answer, then advance the book's test
+    // counter once, on the final question.
+    actions.gradeWord(book.id, current.id, result);
+    if (index >= total - 1) actions.completeTest(book.id);
     setGrades((prev) => [...prev, result]);
     setRevealed(false);
     setIndex((i) => i + 1);
@@ -175,6 +179,7 @@ export default function TestPage() {
                 Answer
               </span>
               <p className="text-3xl font-extrabold text-primary sm:text-4xl">
+                <span className="text-muted-foreground">{current.number}. </span>
                 {current.word}
               </p>
             </div>

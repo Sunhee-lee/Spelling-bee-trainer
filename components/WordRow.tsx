@@ -29,6 +29,9 @@ export function WordRow({ bookId, word }: WordRowProps) {
 
   return (
     <li className="flex items-center gap-3 px-4 py-3">
+      <span className="w-8 shrink-0 text-right text-sm font-bold tabular-nums text-muted-foreground">
+        {word.number}
+      </span>
       <div className="min-w-0 flex-1">
         <p className="truncate font-bold">{word.word}</p>
         <p className="truncate text-sm text-muted-foreground">{word.meaning}</p>

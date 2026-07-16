@@ -28,7 +28,7 @@ interface Preview {
   invalid: number;
 }
 
-const PLACEHOLDER = `add,더하다\nact,행동하다\napple,사과\nbeautiful,아름다운`;
+const PLACEHOLDER = `1,add,더하다\n2,act,행동하다\n3,apple,사과`;
 
 interface BulkImportDialogProps {
   book: Book;
@@ -101,9 +101,10 @@ export function BulkImportDialog({ book, trigger }: BulkImportDialogProps) {
             <DialogHeader>
               <DialogTitle>Bulk import</DialogTitle>
               <DialogDescription>
-                Paste one word per line as{" "}
-                <span className="font-semibold">english,korean</span>. Empty
-                lines are ignored.
+                One word per line, as{" "}
+                <span className="font-semibold">number,english,korean</span> or{" "}
+                <span className="font-semibold">english,korean</span>. Missing
+                numbers are assigned automatically; empty lines are ignored.
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-2">

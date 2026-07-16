@@ -1,10 +1,12 @@
-import type { AppSettings, AppState, Book } from "@/types";
+import type { AppSettings, AppState, Book, Word } from "@/types";
 import type { ParsedEntry } from "@/services/vocabIO";
 import type { StateRepository } from "@/storage/repository";
 import { LocalStorageRepository } from "@/storage/localStorageRepository";
 import { createInitialState } from "@/storage/seed";
+import { migrateState } from "@/storage/migrate";
 import { createId } from "@/services/id";
-import { createWord } from "@/services/srs";
+import { createWord, gradeWord, type Grade } from "@/services/srs";
+import { applyLocks } from "@/services/stats";
 
 export type ImportStrategy = "skip" | "replace";
 
@@ -12,6 +14,26 @@ export interface ImportSummary {
   imported: number;
   replaced: number;
   skipped: number;
+}
+
+/** Next display number for a book: one past the current maximum (1 if empty). */
+function nextNumber(words: readonly Word[]): number {
+  return words.reduce((max, w) => Math.max(max, w.number), 0) + 1;
+}
+
+/** Return a book with its learning progress cleared (words kept). */
+function resetProgress(book: Book): Book {
+  return {
+    ...book,
+    currentTest: 1,
+    words: book.words.map((w) => ({
+      ...w,
+      mastered: false,
+      consecutiveCorrect: 0,
+      level: 0,
+      nextReviewTest: 0,
+    })),
+  };
 }
 
 type Listener = () => void;
@@ -54,7 +76,9 @@ export class VocabStore {
     if (this.hydrated) return;
     const loaded = this.repo.load();
     if (loaded) {
-      this.state = loaded;
+      // Upgrade any older schema (e.g. words without a `number`) on load.
+      this.state = migrateState(loaded);
+      this.repo.save(this.state);
     } else {
       // First run — persist the seeded state.
       this.repo.save(this.state);
@@ -64,8 +88,11 @@ export class VocabStore {
   };
 
   private commit(next: AppState): void {
-    this.state = next;
-    this.repo.save(next);
+    // One-way unlock: any change that completes a prerequisite book opens its
+    // dependents (e.g. Basic 100 fully mastered unlocks the Supplemental List).
+    const state = { ...next, books: applyLocks(next.books, false) };
+    this.state = state;
+    this.repo.save(state);
     this.emit();
   }
 
@@ -114,7 +141,7 @@ export class VocabStore {
     if (!word.trim() || !meaning.trim()) return;
     this.updateBook(bookId, (b) => ({
       ...b,
-      words: [...b.words, createWord(word, meaning)],
+      words: [...b.words, createWord(nextNumber(b.words), word, meaning)],
     }));
   }
 
@@ -155,16 +182,21 @@ export class VocabStore {
       const words = [...book.words];
       const indexByKey = new Map<string, number>();
       words.forEach((w, i) => indexByKey.set(w.word.toLowerCase(), i));
+      let auto = nextNumber(words);
 
       for (const entry of entries) {
         const key = entry.word.trim().toLowerCase();
         const existingIndex = indexByKey.get(key);
 
         if (existingIndex === undefined) {
-          words.push(createWord(entry.word, entry.meaning));
+          // Use the explicit number if provided, else the next auto number.
+          const num = entry.number ?? auto;
+          auto = Math.max(auto, num) + 1;
+          words.push(createWord(num, entry.word, entry.meaning));
           indexByKey.set(key, words.length - 1);
           summary.imported++;
         } else if (strategy === "replace") {
+          // Keep the existing number to preserve sheet alignment.
           words[existingIndex] = {
             ...words[existingIndex],
             meaning: entry.meaning.trim(),
@@ -181,21 +213,47 @@ export class VocabStore {
     return summary;
   }
 
-  // --- Progress & data actions --------------------------------------------
+  // --- Test actions --------------------------------------------------------
 
-  /** Reset SRS progress for one book (words back to level 0, test counter to 1). */
-  resetBookProgress(bookId: string): void {
+  /**
+   * Grade a single answer, applying the SRS transition against the book's
+   * current test number. Persisted immediately so progress survives a refresh
+   * mid-test.
+   */
+  gradeWord(bookId: string, wordId: string, result: Grade): void {
     this.updateBook(bookId, (b) => ({
       ...b,
-      currentTest: 1,
-      words: b.words.map((w) => ({
-        ...w,
-        mastered: false,
-        consecutiveCorrect: 0,
-        level: 0,
-        nextReviewTest: 0,
-      })),
+      words: b.words.map((w) =>
+        w.id === wordId ? gradeWord(w, b.currentTest, result) : w
+      ),
     }));
+  }
+
+  /** Advance the book's test counter. Call once when a test finishes. */
+  completeTest(bookId: string): void {
+    this.updateBook(bookId, (b) => ({ ...b, currentTest: b.currentTest + 1 }));
+  }
+
+  // --- Progress & data actions --------------------------------------------
+
+  /**
+   * Reset SRS progress for one book (words back to level 0, test counter to 1)
+   * without deleting words. Also re-evaluates dependent-book locks.
+   */
+  resetBookProgress(bookId: string): void {
+    const books = this.state.books.map((b) =>
+      b.id === bookId ? resetProgress(b) : b
+    );
+    this.commit({ ...this.state, books: applyLocks(books, true) });
+  }
+
+  /**
+   * Reset learning progress across every book without deleting any words.
+   * Clears current test, master status, level, and consecutive-correct counts.
+   */
+  resetAllProgress(): void {
+    const books = this.state.books.map(resetProgress);
+    this.commit({ ...this.state, books: applyLocks(books, true) });
   }
 
   updateSettings(patch: Partial<AppSettings>): void {
@@ -211,6 +269,35 @@ export class VocabStore {
     this.state = createInitialState();
     this.repo.save(this.state);
     this.emit();
+  }
+
+  // --- Backup / restore ----------------------------------------------------
+
+  /** Serialize the full app state to a pretty-printed JSON string. */
+  serialize(): string {
+    return JSON.stringify(this.state, null, 2);
+  }
+
+  /**
+   * Replace all data from a backup JSON string. Returns false (leaving current
+   * data untouched) if the input is not a recognizable backup.
+   */
+  importBackup(json: string): boolean {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(json);
+    } catch {
+      return false;
+    }
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !Array.isArray((parsed as { books?: unknown }).books)
+    ) {
+      return false;
+    }
+    this.commit(migrateState(parsed));
+    return true;
   }
 }
 
