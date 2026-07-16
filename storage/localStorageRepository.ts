@@ -20,12 +20,12 @@ export class LocalStorageRepository implements StateRepository {
     return typeof window !== "undefined" && !!window.localStorage;
   }
 
-  load(): AppState | null {
+  load(): unknown {
     if (!this.available()) return null;
     try {
       const raw = window.localStorage.getItem(this.key);
       if (!raw) return null;
-      return JSON.parse(raw) as AppState;
+      return JSON.parse(raw);
     } catch {
       // Corrupt or unreadable data — treat as empty rather than crashing.
       return null;

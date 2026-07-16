@@ -1,8 +1,9 @@
-import type { AppSettings, AppState, Book } from "@/types";
+import type { AppSettings, AppState, Book, Word } from "@/types";
 import type { ParsedEntry } from "@/services/vocabIO";
 import type { StateRepository } from "@/storage/repository";
 import { LocalStorageRepository } from "@/storage/localStorageRepository";
 import { createInitialState } from "@/storage/seed";
+import { migrateState } from "@/storage/migrate";
 import { createId } from "@/services/id";
 import { createWord } from "@/services/srs";
 
@@ -12,6 +13,11 @@ export interface ImportSummary {
   imported: number;
   replaced: number;
   skipped: number;
+}
+
+/** Next display number for a book: one past the current maximum (1 if empty). */
+function nextNumber(words: readonly Word[]): number {
+  return words.reduce((max, w) => Math.max(max, w.number), 0) + 1;
 }
 
 type Listener = () => void;
@@ -54,7 +60,9 @@ export class VocabStore {
     if (this.hydrated) return;
     const loaded = this.repo.load();
     if (loaded) {
-      this.state = loaded;
+      // Upgrade any older schema (e.g. words without a `number`) on load.
+      this.state = migrateState(loaded);
+      this.repo.save(this.state);
     } else {
       // First run — persist the seeded state.
       this.repo.save(this.state);
@@ -114,7 +122,7 @@ export class VocabStore {
     if (!word.trim() || !meaning.trim()) return;
     this.updateBook(bookId, (b) => ({
       ...b,
-      words: [...b.words, createWord(word, meaning)],
+      words: [...b.words, createWord(nextNumber(b.words), word, meaning)],
     }));
   }
 
@@ -155,16 +163,21 @@ export class VocabStore {
       const words = [...book.words];
       const indexByKey = new Map<string, number>();
       words.forEach((w, i) => indexByKey.set(w.word.toLowerCase(), i));
+      let auto = nextNumber(words);
 
       for (const entry of entries) {
         const key = entry.word.trim().toLowerCase();
         const existingIndex = indexByKey.get(key);
 
         if (existingIndex === undefined) {
-          words.push(createWord(entry.word, entry.meaning));
+          // Use the explicit number if provided, else the next auto number.
+          const num = entry.number ?? auto;
+          auto = Math.max(auto, num) + 1;
+          words.push(createWord(num, entry.word, entry.meaning));
           indexByKey.set(key, words.length - 1);
           summary.imported++;
         } else if (strategy === "replace") {
+          // Keep the existing number to preserve sheet alignment.
           words[existingIndex] = {
             ...words[existingIndex],
             meaning: entry.meaning.trim(),
@@ -198,6 +211,25 @@ export class VocabStore {
     }));
   }
 
+  /**
+   * Reset learning progress across every book without deleting any words.
+   * Clears current test, master status, level, and consecutive-correct counts.
+   */
+  resetAllProgress(): void {
+    const books = this.state.books.map((b) => ({
+      ...b,
+      currentTest: 1,
+      words: b.words.map((w) => ({
+        ...w,
+        mastered: false,
+        consecutiveCorrect: 0,
+        level: 0,
+        nextReviewTest: 0,
+      })),
+    }));
+    this.commit({ ...this.state, books });
+  }
+
   updateSettings(patch: Partial<AppSettings>): void {
     this.commit({
       ...this.state,
@@ -211,6 +243,35 @@ export class VocabStore {
     this.state = createInitialState();
     this.repo.save(this.state);
     this.emit();
+  }
+
+  // --- Backup / restore ----------------------------------------------------
+
+  /** Serialize the full app state to a pretty-printed JSON string. */
+  serialize(): string {
+    return JSON.stringify(this.state, null, 2);
+  }
+
+  /**
+   * Replace all data from a backup JSON string. Returns false (leaving current
+   * data untouched) if the input is not a recognizable backup.
+   */
+  importBackup(json: string): boolean {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(json);
+    } catch {
+      return false;
+    }
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !Array.isArray((parsed as { books?: unknown }).books)
+    ) {
+      return false;
+    }
+    this.commit(migrateState(parsed));
+    return true;
   }
 }
 

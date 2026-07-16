@@ -8,8 +8,12 @@ import type { AppState } from "@/types";
  * with the new backend and swap the concrete instance in `storage/index.ts`.
  */
 export interface StateRepository {
-  /** Load the persisted state, or null if nothing has been saved yet. */
-  load(): AppState | null;
+  /**
+   * Load the raw persisted value, or null if nothing has been saved yet.
+   * Returns `unknown` because the stored shape may predate the current schema;
+   * callers run it through {@link migrateState} before use.
+   */
+  load(): unknown;
   /** Persist the full state. */
   save(state: AppState): void;
   /** Remove all persisted state. */

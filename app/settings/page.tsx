@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Shuffle, Trash2 } from "lucide-react";
+import { Plus, RotateCcw, Shuffle, Trash2 } from "lucide-react";
 
 import { useActions, useAppState } from "@/store/useVocabStore";
 import { AppHeader } from "@/components/AppHeader";
+import { BackupRestore } from "@/components/BackupRestore";
 import { BookSettingsRow } from "@/components/BookSettingsRow";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,6 +101,12 @@ export default function SettingsPage() {
     actions.updateSettings({ questionsPerTest: Math.max(1, Math.round(value)) });
   }
 
+  function setMasterReviewPercent(value: number) {
+    if (Number.isNaN(value)) return;
+    const clamped = Math.min(100, Math.max(0, Math.round(value)));
+    actions.updateSettings({ masterReviewRate: clamped / 100 });
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <AppHeader title="Settings" emoji="⚙️" backHref="/" />
@@ -190,33 +197,95 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <p className="rounded-2xl bg-muted/60 px-4 py-2.5 text-xs text-muted-foreground">
-                Master review rate (10%) and spaced-repetition scheduling arrive
-                in Phase 2.
-              </p>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label htmlFor="mrr">Master review rate</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Share of mastered words mixed in (used by SRS in Phase 2).
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Input
+                    id="mrr"
+                    type="number"
+                    min={0}
+                    max={100}
+                    inputMode="numeric"
+                    value={Math.round(settings.masterReviewRate * 100)}
+                    onChange={(e) =>
+                      setMasterReviewPercent(e.target.valueAsNumber)
+                    }
+                    className="w-20 text-center"
+                  />
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    %
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Data */}
+          {/* Backup / Restore */}
           <Card>
             <CardHeader>
-              <CardTitle>Data</CardTitle>
+              <CardTitle>Backup &amp; restore</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
+              <p className="text-sm text-muted-foreground">
+                Save all books, words, and progress to a file, or restore from
+                one.
+              </p>
+              <BackupRestore />
+            </CardContent>
+          </Card>
+
+          {/* Data Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Data management</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {/* Clear learning progress (keeps vocabulary) */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline">
+                    <RotateCcw /> Clear all learning progress
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Clear all learning progress?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Resets test numbers, master status, levels, and streaks
+                      for every book. Your vocabulary words are kept.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => actions.resetAllProgress()}>
+                      Reset progress
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              {/* Clear everything */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
                     variant="outline"
                     className="text-destructive hover:bg-destructive/10"
                   >
-                    <Trash2 /> Clear all data
+                    <Trash2 /> Clear everything
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Clear all data?</AlertDialogTitle>
+                    <AlertDialogTitle>Clear everything?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This deletes every book and word on this device and starts
+                      Deletes every book and word on this device and starts
                       fresh with Basic 100 and the Supplemental List. This can’t
                       be undone.
                     </AlertDialogDescription>
@@ -249,7 +318,7 @@ export default function SettingsPage() {
                 reads the meaning, the student says and spells the word, and a
                 grown-up taps ⭕ or ❌.
               </p>
-              <p>Phase 1 · saved locally on this device.</p>
+              <p>Saved locally on this device.</p>
             </CardContent>
           </Card>
         </>

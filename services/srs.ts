@@ -23,9 +23,10 @@ export const MASTER_THRESHOLD = 4;
  * NOTE: the grading/scheduling logic that mutates these fields is Phase 2.
  * Phase 1 only creates words with correct defaults and reads them back.
  */
-export function createWord(word: string, meaning: string): Word {
+export function createWord(number: number, word: string, meaning: string): Word {
   return {
     id: createId(),
+    number,
     word: word.trim(),
     meaning: meaning.trim(),
     mastered: false,

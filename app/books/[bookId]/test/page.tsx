@@ -175,6 +175,7 @@ export default function TestPage() {
                 Answer
               </span>
               <p className="text-3xl font-extrabold text-primary sm:text-4xl">
+                <span className="text-muted-foreground">{current.number}. </span>
                 {current.word}
               </p>
             </div>

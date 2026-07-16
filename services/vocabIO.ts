@@ -1,13 +1,17 @@
 /**
  * Import/export helpers for vocabulary.
  *
- * Import format is one entry per line: `english,korean`, e.g.
- *   add,더하다
- *   apple,사과
- * Export format is CSV with a `word,meaning` header.
+ * Import accepts one entry per line in either format:
+ *   Format A — number,english,korean   e.g.  1,add,더하다
+ *   Format B — english,korean          e.g.  add,더하다
+ * When the number is omitted it is auto-assigned later by the store.
+ *
+ * Export is CSV with a `number,word,meaning` header.
  */
 
 export interface ParsedEntry {
+  /** Explicit number from Format A, or undefined to auto-assign. */
+  number?: number;
   word: string;
   meaning: string;
 }
@@ -21,11 +25,17 @@ export interface ParseResult {
   invalidLines: number[];
 }
 
+/** A non-negative integer string like "17" (no signs, decimals, or spaces). */
+function parseLeadingNumber(field: string): number | null {
+  return /^\d+$/.test(field) ? Number(field) : null;
+}
+
 /**
  * Parse pasted bulk-import text into entries.
  * - Empty/whitespace-only lines are ignored.
- * - Each entry splits on the first comma; the rest is the meaning.
- * - Both sides are trimmed; a missing word or meaning marks the line invalid.
+ * - A line with 3+ fields whose first field is an integer is Format A
+ *   (number, word, meaning). Otherwise it is Format B (word, meaning).
+ * - All fields are trimmed; a missing word or meaning marks the line invalid.
  */
 export function parseImportText(text: string): ParseResult {
   const entries: ParsedEntry[] = [];
@@ -38,18 +48,29 @@ export function parseImportText(text: string): ParseResult {
       skippedEmpty++;
       return;
     }
-    const commaAt = line.indexOf(",");
-    if (commaAt === -1) {
-      invalidLines.push(index + 1);
-      return;
+
+    const fields = line.split(",").map((f) => f.trim());
+    let number: number | undefined;
+    let word: string;
+    let meaning: string;
+
+    const leading = fields.length >= 3 ? parseLeadingNumber(fields[0]) : null;
+    if (leading !== null) {
+      // Format A: number, word, meaning (meaning may itself contain commas).
+      number = leading;
+      word = fields[1];
+      meaning = fields.slice(2).join(",").trim();
+    } else {
+      // Format B: word, meaning.
+      word = fields[0];
+      meaning = fields.slice(1).join(",").trim();
     }
-    const word = line.slice(0, commaAt).trim();
-    const meaning = line.slice(commaAt + 1).trim();
+
     if (word === "" || meaning === "") {
       invalidLines.push(index + 1);
       return;
     }
-    entries.push({ word, meaning });
+    entries.push({ number, word, meaning });
   });
 
   return { entries, skippedEmpty, invalidLines };
@@ -63,10 +84,16 @@ function csvField(value: string): string {
   return value;
 }
 
-/** Serialize entries to a CSV string with a `word,meaning` header. */
-export function toCsv(entries: ParsedEntry[]): string {
-  const rows = entries.map(
-    (e) => `${csvField(e.word)},${csvField(e.meaning)}`
+export interface CsvRow {
+  number: number;
+  word: string;
+  meaning: string;
+}
+
+/** Serialize rows to CSV with a `number,word,meaning` header. */
+export function toCsv(rows: CsvRow[]): string {
+  const body = rows.map(
+    (r) => `${r.number},${csvField(r.word)},${csvField(r.meaning)}`
   );
-  return ["word,meaning", ...rows].join("\n");
+  return ["number,word,meaning", ...body].join("\n");
 }

@@ -1,7 +1,7 @@
 import type { AppState, Book } from "@/types";
 import { createId } from "@/services/id";
 
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 
 export const DEFAULT_SETTINGS: AppState["settings"] = {
   questionsPerTest: 20,
