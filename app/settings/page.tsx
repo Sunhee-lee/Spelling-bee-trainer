@@ -1,19 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ChevronRight,
-  Lock,
-  Plus,
-  Shuffle,
-  Trash2,
-} from "lucide-react";
+import { Plus, Shuffle, Trash2 } from "lucide-react";
 
 import { useActions, useAppState } from "@/store/useVocabStore";
 import { AppHeader } from "@/components/AppHeader";
-import { Badge } from "@/components/ui/badge";
+import { BookSettingsRow } from "@/components/BookSettingsRow";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -121,31 +114,13 @@ export default function SettingsPage() {
               <CardTitle>Vocabulary books</CardTitle>
               <NewBookDialog />
             </CardHeader>
-            <CardContent className="flex flex-col gap-2">
+            <CardContent className="flex flex-col gap-3">
               {state.books.map((book) => (
-                <Link
-                  key={book.id}
-                  href={`/books/${book.id}`}
-                  className="flex items-center gap-3 rounded-2xl border-2 border-border px-4 py-3 transition-colors hover:bg-accent"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{book.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {book.words.length}{" "}
-                      {book.words.length === 1 ? "word" : "words"}
-                    </p>
-                  </div>
-                  {book.locked && (
-                    <Badge variant="muted" className="gap-1">
-                      <Lock className="size-3.5" /> Locked
-                    </Badge>
-                  )}
-                  <ChevronRight className="size-5 text-muted-foreground" />
-                </Link>
+                <BookSettingsRow key={book.id} book={book} />
               ))}
-              <p className="px-1 pt-1 text-xs text-muted-foreground">
-                Bulk import, CSV export, and reset progress live inside each
-                book.
+              <p className="px-1 text-xs text-muted-foreground">
+                Reset progress, rename, and delete live inside each book’s
+                Manage page.
               </p>
             </CardContent>
           </Card>
