@@ -24,7 +24,7 @@ export function useAppState(): { state: AppState; hydrated: boolean } {
   );
 
   useEffect(() => {
-    store.hydrate();
+    void store.hydrate();
   }, []);
 
   return { state, hydrated };

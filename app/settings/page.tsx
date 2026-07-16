@@ -6,6 +6,7 @@ import { Plus, RotateCcw, Shuffle, Trash2 } from "lucide-react";
 
 import { useActions, useAppState } from "@/store/useVocabStore";
 import { AppHeader } from "@/components/AppHeader";
+import { AccountSection } from "@/components/AccountSection";
 import { BackupRestore } from "@/components/BackupRestore";
 import { BookSettingsRow } from "@/components/BookSettingsRow";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,9 @@ export default function SettingsPage() {
         <Card className="h-48 animate-pulse bg-muted/60" />
       ) : (
         <>
+          {/* Account & sync */}
+          <AccountSection />
+
           {/* Vocabulary Books */}
           <Card>
             <CardHeader className="flex-row items-center justify-between">
