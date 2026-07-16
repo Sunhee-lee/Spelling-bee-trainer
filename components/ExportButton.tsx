@@ -5,6 +5,7 @@ import type { VariantProps } from "class-variance-authority";
 
 import type { Book } from "@/types";
 import { toCsv } from "@/services/vocabIO";
+import { useTranslation } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 /** Turn a book name into a safe CSV file name. */
@@ -25,6 +26,7 @@ export function ExportButton({
   size,
   variant = "outline",
 }: ExportButtonProps) {
+  const { t } = useTranslation();
   function handleExport() {
     const rows = [...book.words]
       .sort((a, b) => a.number - b.number)
@@ -48,7 +50,7 @@ export function ExportButton({
       onClick={handleExport}
       disabled={book.words.length === 0}
     >
-      <Download /> Export CSV
+      <Download /> {t("words.exportCsv")}
     </Button>
   );
 }

@@ -74,6 +74,10 @@ function migrateSettings(raw: unknown): AppSettings {
       typeof raw.shuffleQuestions === "boolean"
         ? raw.shuffleQuestions
         : DEFAULT_SETTINGS.shuffleQuestions,
+    language:
+      raw.language === "en" || raw.language === "ko"
+        ? raw.language
+        : DEFAULT_SETTINGS.language,
   };
 }
 

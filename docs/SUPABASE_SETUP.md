@@ -27,6 +27,25 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_cET-uUWARWp4d9gCUjh4Kg_xgYYBxfi
 > Never put the **service role** key in the frontend or in `NEXT_PUBLIC_*`.
 > The app only ever uses the publishable/anon key.
 
+### Optional: admin dashboard (`/admin`)
+
+The admin dashboard is gated to the emails listed in `lib/admin.ts`
+(`ADMIN_EMAILS`). Its aggregate counts (total users / books / words / tests)
+are read by a **server-only** route (`app/api/admin/stats`) that (1) verifies
+the caller's token belongs to an admin, then (2) uses the service-role key to
+read across users. RLS is unchanged; the service role never reaches the
+browser.
+
+To enable the counts, set a **server-only** env var (no `NEXT_PUBLIC_`):
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key   # Supabase → Settings → API
+```
+
+Without it, `/admin` still loads for admins but shows a "not configured"
+notice instead of numbers. Add the same variable in Vercel's project settings
+(not exposed to the client) for production.
+
 ---
 
 ## 2. Run the SQL migrations

@@ -84,6 +84,10 @@ export class SupabaseRepository implements StorageRepository {
           questionsPerTest: settingsRow.questions_per_test,
           masterReviewRate: settingsRow.master_review_rate,
           shuffleQuestions: settingsRow.shuffle_questions,
+          language:
+            settingsRow.language === "en" || settingsRow.language === "ko"
+              ? settingsRow.language
+              : DEFAULT_SETTINGS.language,
         }
       : { ...DEFAULT_SETTINGS };
 
@@ -126,6 +130,7 @@ export class SupabaseRepository implements StorageRepository {
         questions_per_test: state.settings.questionsPerTest,
         master_review_rate: state.settings.masterReviewRate,
         shuffle_questions: state.settings.shuffleQuestions,
+        language: state.settings.language,
       },
       { onConflict: "user_id" }
     );

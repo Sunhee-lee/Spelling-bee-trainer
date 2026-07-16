@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Plus, Upload } from "lucide-react";
 
 import { useBook } from "@/store/useVocabStore";
+import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { BulkImportDialog } from "@/components/BulkImportDialog";
 import { EmptyState } from "@/components/EmptyState";
@@ -17,6 +18,7 @@ import { Card } from "@/components/ui/card";
 export default function ManageWordsPage() {
   const params = useParams<{ bookId: string }>();
   const { book, hydrated } = useBook(params.bookId);
+  const { t } = useTranslation();
 
   if (!hydrated) {
     return (
@@ -31,11 +33,11 @@ export default function ManageWordsPage() {
       <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
         <EmptyState
           emoji="🔍"
-          title="Book not found"
-          description="This book may have been deleted."
+          title={t("common.bookNotFound")}
+          description={t("common.bookNotFoundDesc")}
         >
           <Button asChild>
-            <Link href="/">Back to books</Link>
+            <Link href="/">{t("common.backToBooks")}</Link>
           </Button>
         </EmptyState>
       </main>
@@ -45,11 +47,12 @@ export default function ManageWordsPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <AppHeader
-        title="Manage words"
+        title={t("words.title")}
         backHref={`/books/${book.id}`}
-        subtitle={`${book.name} · ${book.words.length} ${
-          book.words.length === 1 ? "word" : "words"
-        }`}
+        subtitle={t("words.subtitle", {
+          book: book.name,
+          count: book.words.length,
+        })}
       />
 
       {/* Toolbar */}
@@ -58,7 +61,7 @@ export default function ManageWordsPage() {
           bookId={book.id}
           trigger={
             <Button className="flex-1 sm:flex-none">
-              <Plus /> Add word
+              <Plus /> {t("words.addWord")}
             </Button>
           }
         />
@@ -66,7 +69,7 @@ export default function ManageWordsPage() {
           book={book}
           trigger={
             <Button variant="outline" className="flex-1 sm:flex-none">
-              <Upload /> Bulk import
+              <Upload /> {t("words.bulkImport")}
             </Button>
           }
         />
@@ -77,8 +80,8 @@ export default function ManageWordsPage() {
       {book.words.length === 0 ? (
         <EmptyState
           emoji="📖"
-          title="No words yet"
-          description="Add words one at a time, or paste a whole list with Bulk import."
+          title={t("words.noWordsYet")}
+          description={t("words.noWordsDesc")}
         />
       ) : (
         <Card className="overflow-hidden py-0">

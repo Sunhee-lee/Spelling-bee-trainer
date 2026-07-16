@@ -37,6 +37,7 @@ export interface SettingsRow {
   questions_per_test: number;
   master_review_rate: number;
   shuffle_questions: boolean;
+  language: string;
   created_at?: string;
   updated_at?: string;
 }
