@@ -2,23 +2,16 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  BookOpen,
-  ClipboardCheck,
-  Lock,
-  Play,
-  Settings,
-  Trophy,
-} from "lucide-react";
+import { BookOpen, Lock, Settings } from "lucide-react";
 
 import { useAppState } from "@/store/useVocabStore";
 import { computeBookStats } from "@/services/stats";
 import { AppHeader } from "@/components/AppHeader";
+import { BookDashboardPanel } from "@/components/BookDashboardPanel";
 import { BookOptions } from "@/components/BookOptions";
-import { BookProgress } from "@/components/BookProgress";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 export default function BookDashboardPage() {
   const params = useParams<{ bookId: string }>();
@@ -48,10 +41,6 @@ export default function BookDashboardPage() {
       </main>
     );
   }
-
-  const stats = computeBookStats(book);
-  const isEmpty = stats.total === 0;
-  const canTest = !book.locked && !isEmpty;
 
   const prerequisite = book.unlockAfterBookId
     ? state.books.find((b) => b.id === book.unlockAfterBookId)
@@ -86,74 +75,10 @@ export default function BookDashboardPage() {
         </div>
       )}
 
-      {/* Progress */}
-      <Card>
-        <CardContent>
-          {isEmpty ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              No words yet — add some to start tracking progress.
-            </p>
-          ) : (
-            <BookProgress book={book} />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Primary CTA: Today's Practice */}
-      <Button
-        asChild={canTest}
-        size="xl"
-        className="w-full flex-col gap-0.5 py-5"
-        disabled={!canTest}
-        title={
-          book.locked
-            ? "This book is locked"
-            : isEmpty
-              ? "Add words to start practicing"
-              : undefined
-        }
-      >
-        {canTest ? (
-          <Link href={`/books/${book.id}/test?mode=today`}>
-            <span className="flex items-center gap-2">
-              <Play className="fill-current" /> Start Today&rsquo;s Practice
-            </span>
-            <span className="text-xs font-medium opacity-80">
-              {state.settings.questionsPerTest} questions · auto-selected
-            </span>
-          </Link>
-        ) : (
-          <span className="flex items-center gap-2">
-            <Play className="fill-current" /> Start Today&rsquo;s Practice
-          </span>
-        )}
-      </Button>
-
-      {/* Secondary CTA: Full Test */}
-      <Button
-        asChild={canTest}
-        size="lg"
-        variant="outline"
-        className="w-full"
-        disabled={!canTest}
-      >
-        {canTest ? (
-          <Link href={`/books/${book.id}/test?mode=full`}>
-            <ClipboardCheck /> Full Test · all {stats.total} words
-          </Link>
-        ) : (
-          <span className="flex items-center gap-2">
-            <ClipboardCheck /> Full Test
-          </span>
-        )}
-      </Button>
-
-      {/* Master collection */}
-      <Button asChild size="lg" variant="secondary" className="w-full">
-        <Link href={`/books/${book.id}/master`}>
-          <Trophy /> Master Words · {stats.mastered} / {stats.total}
-        </Link>
-      </Button>
+      <BookDashboardPanel
+        book={book}
+        questionsPerTest={state.settings.questionsPerTest}
+      />
 
       {/* Manage & settings */}
       <div className="flex flex-col gap-2 sm:flex-row">

@@ -73,8 +73,11 @@ function TestRunner() {
   function grade(result: Grade) {
     if (!book || !current) return;
     actions.gradeWord(book.id, current.id, result);
-    // Advance the book's test counter once, when a real (non-retry) run ends.
-    if (index >= total - 1 && !isRetry) actions.completeTest(book.id);
+    // Advance the book's test counter once, when a scheduling run ends.
+    // Master Check and Wrong-answer retry are maintenance only — they update
+    // each word's SRS state but must not move the shared test schedule.
+    const advancesSchedule = !isRetry && mode !== "master";
+    if (index >= total - 1 && advancesSchedule) actions.completeTest(book.id);
     setGrades((prev) => [...prev, result]);
     setRevealed(false);
     setIndex((i) => i + 1);
@@ -182,26 +185,31 @@ function TestRunner() {
           </div>
         </Card>
 
-        {(newlyMastered.length > 0 || demoted.length > 0) && (
-          <div className="flex flex-col gap-2">
-            {newlyMastered.length > 0 && (
-              <div className="rounded-2xl bg-success/10 px-4 py-3 text-sm">
-                <p className="font-bold text-success">
-                  🏆 Newly mastered ({newlyMastered.length})
-                </p>
-                <p className="text-muted-foreground">
-                  {newlyMastered.map((w) => `${w.number}. ${w.word}`).join(", ")}
-                </p>
-              </div>
-            )}
-            {demoted.length > 0 && (
-              <div className="rounded-2xl bg-muted px-4 py-3 text-sm">
-                <p className="font-bold">↩︎ Back to learning ({demoted.length})</p>
-                <p className="text-muted-foreground">
-                  {demoted.map((w) => `${w.number}. ${w.word}`).join(", ")}
-                </p>
-              </div>
-            )}
+        {newlyMastered.length > 0 && (
+          <div className="rounded-3xl border-2 border-success/40 bg-success/10 px-5 py-4">
+            <p className="text-lg font-extrabold text-success">
+              🏆 Newly Mastered ({newlyMastered.length})
+            </p>
+            <ul className="mt-2 flex flex-col gap-1">
+              {newlyMastered.map((word) => (
+                <li key={word.id} className="flex items-center gap-2 font-semibold">
+                  <span className="text-success">✓</span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {word.number}.
+                  </span>
+                  {word.word}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {demoted.length > 0 && (
+          <div className="rounded-2xl bg-muted px-4 py-3 text-sm">
+            <p className="font-bold">↩︎ Back to learning ({demoted.length})</p>
+            <p className="text-muted-foreground">
+              {demoted.map((w) => `${w.number}. ${w.word}`).join(", ")}
+            </p>
           </div>
         )}
 
