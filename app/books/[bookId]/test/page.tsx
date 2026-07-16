@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Check, Eye, RotateCcw, X } from "lucide-react";
+import { Check, Eye, Home, LayoutDashboard, RotateCcw, X } from "lucide-react";
 
 import type { Word } from "@/types";
 import { useActions, useAppState } from "@/store/useVocabStore";
@@ -132,13 +132,22 @@ export default function TestPage() {
           </div>
         </Card>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button size="lg" className="flex-1" onClick={restart}>
+        <div className="flex flex-col gap-2">
+          <Button size="lg" onClick={restart}>
             <RotateCcw /> Test again
           </Button>
-          <Button asChild size="lg" variant="outline" className="flex-1">
-            <Link href={`/books/${book.id}`}>Done</Link>
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button asChild size="lg" variant="outline" className="flex-1">
+              <Link href={`/books/${book.id}`}>
+                <LayoutDashboard /> Book dashboard
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="flex-1">
+              <Link href="/">
+                <Home /> Home
+              </Link>
+            </Button>
+          </div>
         </div>
       </main>
     );

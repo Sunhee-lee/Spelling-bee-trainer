@@ -128,7 +128,7 @@ export function BookCard({ book, accent = "bee" }: BookCardProps) {
           )}
           <Button asChild size="lg" variant="outline" className="flex-1">
             <Link href={`/books/${book.id}`}>
-              <BookOpen /> Manage
+              <BookOpen /> Open
             </Link>
           </Button>
         </div>

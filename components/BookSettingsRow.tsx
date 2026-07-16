@@ -15,8 +15,8 @@ interface BookSettingsRowProps {
 
 /**
  * A book entry inside Settings → Vocabulary books, exposing the per-book
- * actions the PRD groups here: Bulk import, Export CSV, and Manage (which also
- * covers rename / reset progress / delete).
+ * actions the PRD groups here: Bulk import, Export CSV, and a link to the
+ * word editor. Rename / reset progress / delete live on the book dashboard.
  */
 export function BookSettingsRow({ book }: BookSettingsRowProps) {
   return (
@@ -46,8 +46,8 @@ export function BookSettingsRow({ book }: BookSettingsRowProps) {
         />
         <ExportButton book={book} size="sm" variant="secondary" />
         <Button asChild variant="ghost" size="sm" className="ml-auto">
-          <Link href={`/books/${book.id}`}>
-            Manage <ChevronRight />
+          <Link href={`/books/${book.id}/words`}>
+            Manage words <ChevronRight />
           </Link>
         </Button>
       </div>
