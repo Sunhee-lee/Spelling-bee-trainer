@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 
+import { useTranslation } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface AuthScreenProps {
@@ -11,11 +14,23 @@ interface AuthScreenProps {
 
 /** Centered, mobile-first shell for the authentication screens. */
 export function AuthScreen({ title, subtitle, children, footer }: AuthScreenProps) {
+  const { t } = useTranslation();
+  const appName = t("common.appName");
+
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
       <div className="text-center">
-        <Link href="/" className="text-4xl" aria-label="Home">
-          🐝
+        <Link
+          href="/"
+          className="inline-flex flex-col items-center gap-1"
+          aria-label={appName}
+        >
+          <span className="text-4xl" aria-hidden>
+            🐝
+          </span>
+          <span className="text-sm font-extrabold tracking-wide text-muted-foreground">
+            {appName}
+          </span>
         </Link>
         <h1 className="mt-2 text-2xl font-extrabold">{title}</h1>
         {subtitle && (

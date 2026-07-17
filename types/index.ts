@@ -54,6 +54,20 @@ export interface Book {
 /** Supported UI languages. */
 export type Language = "ko" | "en";
 
+/**
+ * Daily learning streak (Phase 3). A study day is recorded the first time a
+ * test is completed on a given local calendar date. `lastStudyDate` is a local
+ * "YYYY-MM-DD" string (never UTC) so day boundaries match the learner's clock.
+ */
+export interface StreakState {
+  /** Consecutive study days up to and including `lastStudyDate`. */
+  currentStreak: number;
+  /** Best streak ever reached. Never decreases. */
+  longestStreak: number;
+  /** Local calendar date of the most recent study day, or null if never studied. */
+  lastStudyDate: string | null;
+}
+
 /** User-configurable test behaviour. UI for these lands in Phase 2/3. */
 export interface AppSettings {
   /** Target number of questions per test. */
@@ -72,6 +86,8 @@ export interface AppState {
   version: number;
   books: Book[];
   settings: AppSettings;
+  /** Daily learning streak (Phase 3). */
+  streak: StreakState;
 }
 
 /** A word queued into an in-progress test, paired with its grade. */

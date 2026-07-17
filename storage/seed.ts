@@ -1,5 +1,6 @@
 import type { AppState, Book } from "@/types";
 import { createId } from "@/services/id";
+import { EMPTY_STREAK } from "@/services/streak";
 
 export const STATE_VERSION = 2;
 
@@ -47,5 +48,6 @@ export function createInitialState(): AppState {
     version: STATE_VERSION,
     books: [basic, supplemental],
     settings: { ...DEFAULT_SETTINGS },
+    streak: { ...EMPTY_STREAK },
   };
 }

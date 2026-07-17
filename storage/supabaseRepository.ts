@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { AppSettings, AppState, Book, Word } from "@/types";
+import type { AppSettings, AppState, Book, StreakState, Word } from "@/types";
 import type { StorageRepository, TestSessionRecord } from "@/storage/repository";
 import { DEFAULT_SETTINGS, STATE_VERSION } from "@/storage/seed";
+import { EMPTY_STREAK } from "@/services/streak";
 import type {
   BookRow,
   SettingsRow,
@@ -91,7 +92,17 @@ export class SupabaseRepository implements StorageRepository {
         }
       : { ...DEFAULT_SETTINGS };
 
-    return { version: STATE_VERSION, books, settings };
+    // Streak columns may be absent on rows created before migration 0004 —
+    // fall back to safe defaults so older accounts keep their progress.
+    const streak: StreakState = settingsRow
+      ? {
+          currentStreak: settingsRow.current_streak ?? 0,
+          longestStreak: settingsRow.longest_streak ?? 0,
+          lastStudyDate: settingsRow.last_study_date ?? null,
+        }
+      : { ...EMPTY_STREAK };
+
+    return { version: STATE_VERSION, books, settings, streak };
   }
 
   // --- save (debounced) ----------------------------------------------------
@@ -131,6 +142,9 @@ export class SupabaseRepository implements StorageRepository {
         master_review_rate: state.settings.masterReviewRate,
         shuffle_questions: state.settings.shuffleQuestions,
         language: state.settings.language,
+        current_streak: state.streak.currentStreak,
+        longest_streak: state.streak.longestStreak,
+        last_study_date: state.streak.lastStudyDate,
       },
       { onConflict: "user_id" }
     );

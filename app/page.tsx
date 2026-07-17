@@ -109,7 +109,10 @@ export default function HomePage() {
           {primary && (
             <section className="flex flex-col gap-4">
               <h2 className="text-2xl font-extrabold">{primary.name}</h2>
-              <BookDashboardPanel book={primary} />
+              <BookDashboardPanel
+                book={primary}
+                currentStreak={state.streak.currentStreak}
+              />
             </section>
           )}
 
