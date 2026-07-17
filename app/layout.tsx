@@ -16,6 +16,8 @@ const geistMono = Geist_Mono({
 const SITE_URL = "https://spelling-bee-evan.vercel.app";
 const KO_DESCRIPTION = "뜻을 보고 영어 단어를 말하고 스펠링을 연습하는 어린이용 학습 앱";
 const EN_DESCRIPTION = "A friendly spelling practice app for young learners.";
+// Link-preview (Open Graph) copy, per user request.
+const OG_DESCRIPTION = "내 교재로 연습하는 영어 스펠링 앱";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -38,7 +40,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Spelling Bee",
     title: "Spelling Bee",
-    description: KO_DESCRIPTION,
+    description: OG_DESCRIPTION,
     url: SITE_URL,
     locale: "ko_KR",
     alternateLocale: "en_US",
@@ -46,7 +48,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Spelling Bee",
-    description: EN_DESCRIPTION,
+    description: OG_DESCRIPTION,
   },
 };
 
