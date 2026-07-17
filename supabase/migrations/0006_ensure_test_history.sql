@@ -83,3 +83,8 @@ create policy answers_delete on public.test_answers
     select 1 from public.test_sessions s
     where s.id = session_id and s.user_id = auth.uid()
   ));
+
+-- Table privileges for the PostgREST `authenticated` role (RLS still restricts
+-- rows to their owner). Without these, history writes fail with 42501.
+grant select, insert, update, delete
+  on public.test_sessions, public.test_answers to authenticated;
