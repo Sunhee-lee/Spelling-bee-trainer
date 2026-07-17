@@ -176,7 +176,7 @@ export const ko = {
     newBookDesc: "단어장을 만든 뒤 단어를 추가하세요.",
     bookName: "단어장 이름",
     manageWordsHint: "각 단어장의 관리 화면에서 진행도 초기화, 이름 변경, 삭제를 할 수 있어요.",
-    testSettings: "학습 설정",
+    testSettings: "연습 설정",
     questionsPerTest: "테스트 문제 수",
     questionsPerTestDesc: "한 번에 연습할 문제 수를 선택하세요.",
     shuffle: "문제 순서 섞기",

@@ -180,7 +180,7 @@ export const en: typeof ko = {
     bookName: "Book name",
     manageWordsHint:
       "Reset progress, rename, and delete live inside each book’s Manage page.",
-    testSettings: "Learning Settings",
+    testSettings: "Practice Settings",
     questionsPerTest: "Questions per Test",
     questionsPerTestDesc: "Choose how many questions to practice at a time.",
     shuffle: "Shuffle Questions",
@@ -226,15 +226,15 @@ export const en: typeof ko = {
     clearProgressTitle: "Reset learning progress?",
     clearProgressDesc:
       "Resets test numbers, master status, levels, and streaks for every book. Your vocabulary words are kept.",
-    clearEverything: "Delete Everything",
+    clearEverything: "Delete All Data",
     clearEverythingDescription: "Delete all words and learning progress.",
-    clearEverythingTitle: "Delete everything?",
+    clearEverythingTitle: "Delete all data?",
     clearEverythingDesc:
       "Deletes all books, words, settings, and progress, then starts fresh with Basic 100 and the Supplemental List.",
-    clearFinalTitle: "Really delete everything?",
+    clearFinalTitle: "Really delete all data?",
     clearFinalDesc:
-      "This can never be undone. Tap below to confirm you want to delete everything.",
-    clearFinalAction: "Yes, delete everything",
+      "This can never be undone. Tap below to confirm you want to delete all data.",
+    clearFinalAction: "Yes, delete all data",
   },
   backup: {
     exportBackup: "Export backup (JSON)",
