@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
-  emoji: string;
+  /** A leading icon node (e.g. a lucide icon). Sized by this component. */
+  icon: React.ReactNode;
   title: string;
   description?: string;
   children?: React.ReactNode;
@@ -10,7 +11,7 @@ interface EmptyStateProps {
 
 /** Friendly placeholder shown when a list has no items yet. */
 export function EmptyState({
-  emoji,
+  icon,
   title,
   description,
   children,
@@ -23,8 +24,8 @@ export function EmptyState({
         className
       )}
     >
-      <div className="text-5xl" aria-hidden>
-        {emoji}
+      <div aria-hidden className="text-muted-foreground [&>svg]:size-12">
+        {icon}
       </div>
       <h3 className="text-lg font-bold">{title}</h3>
       {description && (

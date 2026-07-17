@@ -90,13 +90,16 @@ export function Celebration({ intensity }: { intensity: "calm" | "strong" }) {
         );
       })}
       {sparkles.map((s) => (
-        <span
+        <svg
           key={`s${s.id}`}
-          className="sbt-sparkle absolute text-lg"
+          className="sbt-sparkle absolute size-5"
+          viewBox="0 0 24 24"
+          fill="var(--bee)"
           style={{ left: `${s.left}%`, top: `${s.top}%`, animationDelay: `${s.delay}ms` }}
         >
-          ✨
-        </span>
+          {/* Four-point sparkle — renders identically on every device. */}
+          <path d="M12 2 L14 10 L22 12 L14 14 L12 22 L10 14 L2 12 L10 10 Z" />
+        </svg>
       ))}
     </div>
   );

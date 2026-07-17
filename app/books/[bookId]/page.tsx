@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Lock, Search } from "lucide-react";
 
 import type { Book } from "@/types";
 import { useAppState } from "@/store/useVocabStore";
@@ -27,9 +28,7 @@ function LockedBookScreen({ book, prerequisite }: { book: Book; prerequisite?: B
       <AppHeader title={book.name} backHref="/" />
 
       <Card className="items-center gap-3 py-10 text-center">
-        <div className="text-6xl" aria-hidden>
-          🔒
-        </div>
+        <Lock className="size-14 text-muted-foreground" aria-hidden />
         <h1 className="text-2xl font-extrabold">{book.name}</h1>
         <p className="max-w-sm px-4 text-sm text-muted-foreground">
           {t("book.lockedUnlockMsg", { prereq: preName })}
@@ -83,7 +82,7 @@ export default function BookDashboardPage() {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
         <EmptyState
-          emoji="🔍"
+          icon={<Search />}
           title={t("common.bookNotFound")}
           description={t("common.bookNotFoundDesc")}
         >

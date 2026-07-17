@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import {
+  BarChart3,
   BookOpen,
   ChevronRight,
   ClipboardCheck,
+  Flame,
   Play,
   Plus,
   Trophy,
@@ -73,7 +75,8 @@ export function BookDashboardPanel({
               {t("book.learningProgress")}
             </span>
             {currentStreak >= 2 && (
-              <span className="rounded-full bg-bee/20 px-2.5 py-1 text-xs font-bold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-bee/20 px-2.5 py-1 text-xs font-bold">
+                <Flame className="size-3.5 text-amber-500" />
                 {t("streak.dayStreak", { count: currentStreak })}
               </span>
             )}
@@ -156,7 +159,7 @@ export function BookDashboardPanel({
         className="self-center text-muted-foreground"
       >
         <Link href={`/statistics?book=${book.id}`}>
-          📊 {t("stats.link")}
+          <BarChart3 /> {t("stats.link")}
         </Link>
       </Button>
 

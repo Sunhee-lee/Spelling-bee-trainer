@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Lock, Settings } from "lucide-react";
+import { ChevronRight, Lock, Settings, Trophy } from "lucide-react";
 
 import type { Book } from "@/types";
 import { useAppState } from "@/store/useVocabStore";
@@ -100,9 +100,7 @@ export default function HomePage() {
         <>
           {unlocked && (
             <div className="flex items-center gap-3 rounded-3xl border-2 border-success/40 bg-success/10 px-5 py-4">
-              <span className="text-3xl" aria-hidden>
-                🏆
-              </span>
+              <Trophy className="size-8 shrink-0 text-bee" aria-hidden />
               <p className="text-sm font-semibold sm:text-base">
                 {t("home.unlockedBanner", {
                   prereq: prerequisiteOf(unlocked)?.name ?? "",

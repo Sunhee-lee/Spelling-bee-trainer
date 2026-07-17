@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
+  Ban,
   BookOpen,
   CalendarCheck,
+  Flame,
   RefreshCw,
   ShieldCheck,
   Type,
@@ -133,7 +135,7 @@ export default function AdminPage() {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
         <EmptyState
-          emoji="🚫"
+          icon={<Ban />}
           title={t("admin.forbiddenTitle")}
           description={t("admin.forbiddenDesc")}
         >
@@ -151,7 +153,7 @@ export default function AdminPage() {
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <AppHeader
         title={t("admin.title")}
-        emoji="🛡️"
+        icon={<ShieldCheck className="size-7 text-primary sm:size-8" />}
         backHref="/settings"
         subtitle={t("admin.subtitle")}
         action={
@@ -238,7 +240,7 @@ export default function AdminPage() {
             </h2>
 
             {users.length === 0 ? (
-              <EmptyState emoji="👤" title={t("admin.noUsers")} />
+              <EmptyState icon={<Users />} title={t("admin.noUsers")} />
             ) : (
               <>
                 {/* Desktop table */}
@@ -278,7 +280,14 @@ export default function AdminPage() {
                               {u.mastered} / {u.totalWords}
                             </td>
                             <td className="px-4 py-3 text-right tabular-nums">
-                              {u.currentStreak > 0 ? `🔥 ${u.currentStreak}` : u.currentStreak}
+                              {u.currentStreak > 0 ? (
+                                <span className="inline-flex items-center justify-end gap-1">
+                                  <Flame className="size-3.5 text-amber-500" />
+                                  {u.currentStreak}
+                                </span>
+                              ) : (
+                                u.currentStreak
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -321,10 +330,11 @@ export default function AdminPage() {
                           <dt className="text-muted-foreground">
                             {t("admin.currentStreak")}
                           </dt>
-                          <dd className="text-right tabular-nums">
-                            {u.currentStreak > 0
-                              ? `🔥 ${u.currentStreak}`
-                              : u.currentStreak}
+                          <dd className="flex items-center justify-end gap-1 tabular-nums">
+                            {u.currentStreak > 0 && (
+                              <Flame className="size-3.5 text-amber-500" />
+                            )}
+                            {u.currentStreak}
                           </dd>
                         </dl>
                       </CardContent>

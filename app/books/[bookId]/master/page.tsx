@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Trophy } from "lucide-react";
+import { Search, Sprout, Trophy } from "lucide-react";
 
 import { useBook } from "@/store/useVocabStore";
 import { computeBookStats } from "@/services/stats";
@@ -29,7 +29,7 @@ export default function MasterCollectionPage() {
   if (!book) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
-        <EmptyState emoji="🔍" title={t("common.bookNotFound")}>
+        <EmptyState icon={<Search />} title={t("common.bookNotFound")}>
           <Button asChild>
             <Link href="/">{t("common.backToBooks")}</Link>
           </Button>
@@ -47,7 +47,7 @@ export default function MasterCollectionPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <AppHeader
         title={t("master.title")}
-        emoji="🏆"
+        icon={<Trophy className="size-7 text-bee sm:size-8" />}
         backHref={`/books/${book.id}`}
         subtitle={book.name}
       />
@@ -72,7 +72,7 @@ export default function MasterCollectionPage() {
 
       {mastered.length === 0 ? (
         <EmptyState
-          emoji="🌱"
+          icon={<Sprout className="text-grass" />}
           title={t("master.noMasterYet")}
           description={t("master.noMasterDesc")}
         >
