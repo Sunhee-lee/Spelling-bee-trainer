@@ -36,7 +36,7 @@ function LockedBookScreen({ book, prerequisite }: { book: Book; prerequisite?: B
         </p>
       </Card>
 
-      {preStats && (
+      {preStats && preStats.total > 0 && (
         <Card>
           <CardContent className="flex flex-col gap-3">
             <span className="text-sm font-semibold text-muted-foreground">

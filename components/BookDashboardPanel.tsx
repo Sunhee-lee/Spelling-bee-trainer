@@ -43,15 +43,18 @@ export function BookDashboardPanel({
   if (isEmpty) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
+        <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
           <span className="text-sm font-semibold text-muted-foreground">
             {t("book.learningProgress")}
           </span>
-          <div className="text-5xl" aria-hidden>
+          <div className="text-[3.5rem] leading-none" aria-hidden>
             🌱
           </div>
           <p className="font-semibold">{t("book.noVocabAdded")}</p>
-          <Button asChild size="lg" className="w-full sm:w-auto">
+          <p className="whitespace-pre-line text-sm text-muted-foreground">
+            {t("book.noVocabHint")}
+          </p>
+          <Button asChild size="lg" className="mt-1 w-full sm:w-auto">
             <Link href={`/books/${book.id}/words`}>
               <Plus /> {t("book.addWords")}
             </Link>

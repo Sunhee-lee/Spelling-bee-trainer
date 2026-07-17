@@ -165,10 +165,11 @@ export default function SettingsPage() {
                     {t("settings.questionsPerTestDesc")}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2">
                   <Button
                     variant="outline"
                     size="icon"
+                    className="size-11"
                     aria-label="-"
                     onClick={() => bumpQuestions(-QPT_STEP)}
                     disabled={settings.questionsPerTest <= QPT_MIN}
@@ -183,6 +184,7 @@ export default function SettingsPage() {
                   <Button
                     variant="outline"
                     size="icon"
+                    className="size-11"
                     aria-label="+"
                     onClick={() => bumpQuestions(QPT_STEP)}
                     disabled={settings.questionsPerTest >= QPT_MAX}
@@ -213,11 +215,11 @@ export default function SettingsPage() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <Label>{t("settings.masterReviewRate")}</Label>
-                  <span className="text-sm font-bold tabular-nums">
+                  <span className="rounded-full bg-bee/20 px-2.5 py-0.5 text-sm font-bold tabular-nums">
                     {masterPercent}%
                   </span>
                 </div>
-                <p className="-mt-2 text-sm text-muted-foreground">
+                <p className="-mt-1 text-sm text-muted-foreground">
                   {t("settings.masterReviewRateDesc")}
                 </p>
                 <Slider
@@ -257,26 +259,21 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Danger Zone */}
-          <Card className="border-2 border-destructive/30">
+          {/* Reset & Delete */}
+          <Card>
             <CardHeader>
-              <CardTitle className="text-destructive">
-                {t("settings.dangerZone")}
-              </CardTitle>
+              <CardTitle>{t("settings.dangerZone")}</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+            <CardContent className="flex flex-col gap-5">
               <p className="text-sm text-muted-foreground">
                 {t("settings.dangerZoneDesc")}
               </p>
 
-              {/* Reset all learning progress */}
-              <div className="flex flex-col gap-2">
+              {/* Reset learning progress — neutral, lower priority */}
+              <div className="flex flex-col gap-1.5">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="justify-start border-destructive/40 text-destructive hover:bg-destructive/10"
-                    >
+                    <Button variant="outline" className="justify-start">
                       <RotateCcw /> {t("dataManagement.clearProgress")}
                     </Button>
                   </AlertDialogTrigger>
@@ -302,8 +299,8 @@ export default function SettingsPage() {
                 </p>
               </div>
 
-              {/* Clear everything — two-step confirmation, stronger styling */}
-              <div className="flex flex-col gap-2 rounded-lg border-2 border-destructive/40 bg-destructive/5 p-3">
+              {/* Delete everything — the only destructive action, two-step confirm */}
+              <div className="flex flex-col gap-1.5">
                 <Button
                   variant="destructive"
                   className="justify-start"
@@ -311,7 +308,7 @@ export default function SettingsPage() {
                 >
                   <Trash2 /> {t("dataManagement.clearEverything")}
                 </Button>
-                <p className="text-xs font-medium text-destructive">
+                <p className="text-xs text-muted-foreground">
                   {t("dataManagement.clearEverythingDescription")}
                 </p>
               </div>

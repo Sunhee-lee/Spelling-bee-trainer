@@ -26,8 +26,8 @@ function SecondaryBookCard({
   return (
     <Link href={`/books/${book.id}`} className="block">
       <Card className="py-4 transition-colors hover:bg-accent">
-        <CardContent className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
+        <CardContent className="flex items-center gap-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <p className="flex items-center gap-1.5 truncate font-bold">
               {book.locked && (
                 <Lock className="size-4 shrink-0 text-muted-foreground" />
@@ -35,12 +35,18 @@ function SecondaryBookCard({
               {book.name}
             </p>
             {book.locked ? (
-              <p className="text-sm text-muted-foreground">
-                {t("book.lockedTitle", {
-                  prereq: prerequisite?.name ?? "Basic 100",
-                })}
-                {preStats ? ` (${preStats.mastered} / ${preStats.total})` : ""}
-              </p>
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {t("book.lockedTitle", {
+                    prereq: prerequisite?.name ?? "Basic 100",
+                  })}
+                </p>
+                <p className="text-xs tabular-nums text-muted-foreground">
+                  {preStats && preStats.total > 0
+                    ? `(${preStats.mastered} / ${preStats.total})`
+                    : "—"}
+                </p>
+              </>
             ) : (
               <p className="text-sm text-muted-foreground">
                 {t("progress.master")} {stats.mastered} / {stats.total} ·{" "}
@@ -107,7 +113,7 @@ export default function HomePage() {
           )}
 
           {primary && (
-            <section className="flex flex-col gap-4">
+            <section className="mt-2 flex flex-col gap-4">
               <h2 className="text-2xl font-extrabold">{primary.name}</h2>
               <BookDashboardPanel
                 book={primary}
@@ -117,7 +123,7 @@ export default function HomePage() {
           )}
 
           {others.length > 0 && (
-            <section className="flex flex-col gap-3 border-t border-border pt-6">
+            <section className="flex flex-col gap-2.5 border-t border-border/60 pt-5">
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
                 {t("home.moreBooks")}
               </h2>
