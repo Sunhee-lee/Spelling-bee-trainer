@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { BookOpen, Plus, Search, Upload } from "lucide-react";
+import { BookOpen, Lock, Plus, Search, Upload } from "lucide-react";
 
-import { useBook } from "@/store/useVocabStore";
+import { useAppState, useBook } from "@/store/useVocabStore";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { BulkImportDialog } from "@/components/BulkImportDialog";
@@ -18,7 +18,15 @@ import { Card } from "@/components/ui/card";
 export default function ManageWordsPage() {
   const params = useParams<{ bookId: string }>();
   const { book, hydrated } = useBook(params.bookId);
+  const { state } = useAppState();
   const { t } = useTranslation();
+
+  // Prerequisite name for the "practice locked" banner (words can still be
+  // managed while the book's practice is locked).
+  const prerequisiteName = book?.unlockAfterBookId
+    ? state.books.find((b) => b.id === book.unlockAfterBookId)?.name ??
+      "Basic 100"
+    : "Basic 100";
 
   if (!hydrated) {
     return (
@@ -54,6 +62,19 @@ export default function ManageWordsPage() {
           count: book.words.length,
         })}
       />
+
+      {/* Practice-locked notice — words can still be added/edited/deleted. */}
+      {book.locked && (
+        <div className="flex items-start gap-3 rounded-2xl border border-bee/40 bg-bee/10 px-4 py-3">
+          <Lock className="mt-0.5 size-5 shrink-0 text-bee" aria-hidden />
+          <div className="flex flex-col gap-0.5">
+            <p className="text-sm font-bold">{t("words.lockedBannerTitle")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("words.lockedBannerDesc", { prereq: prerequisiteName })}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="flex flex-wrap gap-2">

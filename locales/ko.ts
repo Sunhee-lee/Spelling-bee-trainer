@@ -63,6 +63,9 @@ export const ko = {
     lockedCurrent: "현재 진행: {mastered} / {total} 단어",
     lockedRemaining: "남은 단어: {count}개",
     lockedAuto: "{prereq}을 모두 마스터하면 자동으로 열려요.",
+    practiceLocked: "학습 잠금",
+    practiceLockedDesc: "{prereq}을 모두 마스터하면 학습할 수 있어요.",
+    manageWordsCta: "단어 관리하기",
   },
   progress: {
     mastered: "마스터",
@@ -88,6 +91,8 @@ export const ko = {
     deleteAria: "{word} 삭제",
     deleteTitle: "“{word}”를 삭제할까요?",
     deleteDesc: "이 단어장에서 단어가 삭제돼요. 되돌릴 수 없어요.",
+    lockedBannerTitle: "단어는 미리 등록할 수 있어요.",
+    lockedBannerDesc: "{prereq}을 모두 마스터하면 이 단어장으로 학습할 수 있습니다.",
   },
   test: {
     modeToday: "오늘의 학습",
