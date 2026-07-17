@@ -30,6 +30,11 @@ export const ko = {
     open: "열기",
     more: "더보기",
   },
+  sync: {
+    failedTitle: "저장 실패",
+    failedDesc: "변경 사항이 클라우드에 저장되지 않았어요. 다시 시도해 주세요.",
+    retry: "다시 시도",
+  },
   home: {
     subtitle: "단어장을 골라 연습을 시작해요!",
     moreBooks: "다른 단어장",

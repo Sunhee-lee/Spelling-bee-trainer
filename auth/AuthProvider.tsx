@@ -16,6 +16,7 @@ import { store } from "@/store/store";
 import { LocalStorageRepository } from "@/storage/localStorageRepository";
 import { SupabaseRepository } from "@/storage/supabaseRepository";
 import { CloudMigrationDialog } from "@/components/CloudMigrationDialog";
+import { SyncStatusToast } from "@/components/SyncStatusToast";
 
 type Result = { error?: string };
 
@@ -188,6 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         onUpload={uploadLocal}
         onStartFresh={startFresh}
       />
+      <SyncStatusToast />
     </AuthContext.Provider>
   );
 }

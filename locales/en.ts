@@ -31,6 +31,11 @@ export const en: typeof ko = {
     open: "Open",
     more: "More",
   },
+  sync: {
+    failedTitle: "Save failed",
+    failedDesc: "Your changes weren’t saved to the cloud. Please retry.",
+    retry: "Retry",
+  },
   home: {
     subtitle: "Pick a book and start practicing!",
     moreBooks: "More Books",
