@@ -191,6 +191,97 @@ describe("failure handling & no-clobber guarantees", () => {
   });
 });
 
+describe("book rename persistence (signed in)", () => {
+  it("G: rename a book, refresh before cloud flush → new name kept", async () => {
+    const { cloud, store } = await signedInWithSeed();
+    const id = store.getSnapshot().books[0].id;
+
+    store.renameBook(id, "Level 1 Words");
+    expect(store.getSnapshot().books[0].name).toBe("Level 1 Words"); // immediate
+
+    const after = await boot(cloud); // refresh before the debounced write fired
+    expect(after.store.getSnapshot().books[0].name).toBe("Level 1 Words");
+  });
+
+  it("H: rename + cloud failure → error surfaced, restored from buffer on reload", async () => {
+    const { cloud, store, repo } = await signedInWithSeed();
+    const id = store.getSnapshot().books[0].id;
+
+    const statuses: SyncStatus[] = [];
+    store.subscribeSync((s) => statuses.push(s));
+
+    repo.failMode = true;
+    store.renameBook(id, "Renamed Offline");
+    await repo.flushNow(); // fails
+
+    expect(statuses.some((s) => !s.ok)).toBe(true); // toast trigger
+    expect(cloud.value?.books[0].name).toBe("Basic 100"); // cloud NOT changed
+    expect(
+      window.localStorage.getItem("spelling-bee-trainer/pending")
+    ).not.toBeNull(); // rename held in buffer
+
+    const after = await boot(cloud); // reload → cloud can't clobber the rename
+    expect(after.store.getSnapshot().books[0].name).toBe("Renamed Offline");
+  });
+
+  it("I: rename → retry succeeds → cloud updated and buffer cleared", async () => {
+    const { cloud, store, repo } = await signedInWithSeed();
+    const id = store.getSnapshot().books[0].id;
+
+    repo.failMode = true;
+    store.renameBook(id, "Retry Name");
+    await repo.flushNow(); // fail
+    expect(
+      window.localStorage.getItem("spelling-bee-trainer/pending")
+    ).not.toBeNull();
+
+    repo.failMode = false;
+    store.retrySync();
+    await repo.flushNow(); // success
+
+    expect(cloud.value?.books[0].name).toBe("Retry Name");
+    expect(
+      window.localStorage.getItem("spelling-bee-trainer/pending")
+    ).toBeNull(); // cleared only after a confirmed write
+  });
+
+  it("J: rename + add + edit words together → all persist after refresh", async () => {
+    const { cloud, store } = await signedInWithSeed();
+    const id = store.getSnapshot().books[0].id;
+
+    store.renameBook(id, "Combined");
+    store.addWord(id, "alpha", "알파");
+    const wid = store.getSnapshot().books[0].words[0].id;
+    store.updateWord(id, wid, { word: "alphabet", meaning: "알파벳" });
+
+    const after = await boot(cloud);
+    const book = after.store.getSnapshot().books[0];
+    expect(book.name).toBe("Combined");
+    expect(book.words.map((w) => w.word)).toContain("alphabet");
+  });
+
+  it("two devices editing the same book stay consistent (last write wins, no dupes)", async () => {
+    const cloud: CloudRef = { value: null };
+    const a = await boot(cloud);
+    await a.repo.flushNow(); // device A seeds the cloud
+    const id = a.store.getSnapshot().books[0].id;
+
+    a.store.renameBook(id, "From A");
+    await a.repo.flushNow();
+    expect(cloud.value?.books[0].name).toBe("From A");
+
+    // Device B (separate local storage) loads → sees A's change, no conflict.
+    window.localStorage.clear();
+    const b = await boot(cloud);
+    expect(b.store.getSnapshot().books[0].name).toBe("From A");
+
+    b.store.renameBook(id, "From B");
+    await b.repo.flushNow();
+    expect(cloud.value?.books[0].name).toBe("From B");
+    expect(cloud.value?.books.length).toBe(2); // upsert-by-id → no duplicate rows
+  });
+});
+
 describe("SupabaseRepository surfaces write errors (no silent success)", () => {
   function stateWithWord(): AppState {
     return {
@@ -257,6 +348,16 @@ describe("SupabaseRepository surfaces write errors (no silent success)", () => {
     await repo.flushNow();
     expect(settled).toHaveLength(1);
     expect(settled[0]).not.toBeNull(); // a real error, not silent success
+  });
+
+  it("reports the error when the vocabulary_books upsert fails (rename path)", async () => {
+    const repo = new SupabaseRepository(mockSupabase("vocabulary_books"), "u1");
+    const settled: unknown[] = [];
+    repo.onSyncSettled = (e) => settled.push(e);
+    await repo.save(stateWithWord());
+    await repo.flushNow();
+    expect(settled).toHaveLength(1);
+    expect(settled[0]).not.toBeNull(); // book upsert failure is not silent
   });
 
   it("reports success (null) when every write succeeds", async () => {
