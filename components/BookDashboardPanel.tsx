@@ -46,10 +46,7 @@ export function BookDashboardPanel({
   if (isEmpty) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
-          <span className="text-sm font-semibold text-muted-foreground">
-            {t("book.learningProgress")}
-          </span>
+        <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
           <SproutIcon className="size-24" />
           <p className="font-semibold">{t("book.noVocabAdded")}</p>
           <p className="whitespace-pre-line text-sm text-muted-foreground">

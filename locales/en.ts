@@ -19,6 +19,7 @@ export const en: typeof ko = {
     loading: "Loading…",
     settings: "Settings",
     home: "Home",
+    installApp: "Install app",
     wordsCount: "{count} words",
     savedOnDevice: "Everything is saved on this device.",
     bookNotFound: "Book not found",

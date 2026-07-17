@@ -18,6 +18,7 @@ export const ko = {
     loading: "불러오는 중…",
     settings: "설정",
     home: "홈",
+    installApp: "앱 설치",
     wordsCount: "단어 {count}개",
     savedOnDevice: "이 기기에 모두 저장돼요.",
     bookNotFound: "단어장을 찾을 수 없어요",
