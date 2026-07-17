@@ -1,7 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { AppSettings, AppState, Book, StreakState, Word } from "@/types";
-import type { StorageRepository, TestSessionRecord } from "@/storage/repository";
+import type {
+  StorageRepository,
+  StoredSession,
+  TestSessionRecord,
+} from "@/storage/repository";
 import { DEFAULT_SETTINGS, STATE_VERSION } from "@/storage/seed";
 import { EMPTY_STREAK } from "@/services/streak";
 import type {
@@ -218,6 +222,22 @@ export class SupabaseRepository implements StorageRepository {
   }
 
   // --- test history --------------------------------------------------------
+
+  async loadSessions(): Promise<StoredSession[]> {
+    const { data, error } = await this.supabase
+      .from("test_sessions")
+      .select("book_id, correct, wrong, created_at")
+      .eq("user_id", this.userId);
+    if (error || !data) return [];
+    return (data as { book_id: string; correct: number; wrong: number; created_at: string }[]).map(
+      (r) => ({
+        bookId: r.book_id,
+        correct: r.correct,
+        wrong: r.wrong,
+        createdAt: r.created_at,
+      })
+    );
+  }
 
   async recordSession(session: TestSessionRecord): Promise<void> {
     // Make sure the words referenced by answers already exist in the cloud.

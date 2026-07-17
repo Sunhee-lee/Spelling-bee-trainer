@@ -357,6 +357,9 @@ function TestRunner() {
         {newlyMastered.length > 0 && (
           <div className="sbt-pop-in rounded-3xl border-2 border-bee/50 bg-bee/10 px-5 py-4">
             <p className="text-lg font-extrabold">{t("test.newMasterTitle")}</p>
+            <p className="text-sm font-bold text-amber-600">
+              {t("test.masteredTodayCount", { count: newlyMastered.length })}
+            </p>
             <ul className="mt-2 flex flex-col gap-1">
               {newlyMastered.map((word) => (
                 <li key={word.id} className="flex items-center gap-2 font-semibold">

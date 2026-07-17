@@ -39,7 +39,7 @@ function SecondaryBookCard({
                 {t("book.lockedTitle", {
                   prereq: prerequisite?.name ?? "Basic 100",
                 })}
-                {preStats ? ` · ${preStats.mastered} / ${preStats.total}` : ""}
+                {preStats ? ` (${preStats.mastered} / ${preStats.total})` : ""}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">

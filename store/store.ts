@@ -2,6 +2,7 @@ import type { AppSettings, AppState, Book, StreakState, Word } from "@/types";
 import type { ParsedEntry } from "@/services/vocabIO";
 import type {
   StorageRepository,
+  StoredSession,
   TestSessionRecord,
 } from "@/storage/repository";
 import { LocalStorageRepository } from "@/storage/localStorageRepository";
@@ -140,6 +141,15 @@ export class VocabStore {
   /** Record a finished test in history (best-effort; ignored by no-op backends). */
   recordSession(session: TestSessionRecord): void {
     void this.repo.recordSession?.(session);
+  }
+
+  /** Load completed sessions from the active backend (for the statistics page). */
+  async loadSessions(): Promise<StoredSession[]> {
+    try {
+      return (await this.repo.loadSessions?.()) ?? [];
+    } catch {
+      return [];
+    }
   }
 
   private emit(): void {

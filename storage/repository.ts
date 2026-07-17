@@ -9,6 +9,15 @@ export interface TestSessionRecord {
   answers: { wordId: string; correct: boolean }[];
 }
 
+/** A stored completed session, read back for the learner statistics page. */
+export interface StoredSession {
+  bookId: string;
+  correct: number;
+  wrong: number;
+  /** Epoch ms (LocalStorage) or ISO string (Supabase). */
+  createdAt: number | string;
+}
+
 /**
  * Persistence boundary for the whole app state. The UI/store depend only on
  * this interface — never on LocalStorage or Supabase directly. Swap the
@@ -25,4 +34,6 @@ export interface StorageRepository {
   clear(): Promise<void>;
   /** Append a finished test to history. Optional; no-op backends may omit it. */
   recordSession?(session: TestSessionRecord): Promise<void>;
+  /** Read completed sessions for the statistics page. Optional. */
+  loadSessions?(): Promise<StoredSession[]>;
 }
