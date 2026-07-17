@@ -21,7 +21,7 @@ export function HoneycombBackground() {
     >
       <svg
         viewBox="0 0 100 100"
-        className="absolute -right-20 -top-24 size-72 text-bee opacity-[0.04] sm:size-96"
+        className="absolute -right-12 -top-16 size-72 text-bee opacity-[0.04] sm:-right-20 sm:-top-24 sm:size-96"
       >
         <polygon points={HEX_POINTS} fill="currentColor" />
       </svg>
