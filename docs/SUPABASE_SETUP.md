@@ -77,6 +77,12 @@ order (copy-paste their contents), or use the Supabase CLI.
    (re)creates the `test_sessions` / `test_answers` tables, their indexes, and
    RLS policies, so a project set up without them gets working statistics. Safe
    to run even if they already exist.
+7. `supabase/migrations/0007_ensure_schema.sql` — **run this if saving fails
+   ("저장 실패" / "Save failed") while signed in.** It idempotently (re)creates
+   every table, the later-added `settings` columns (language + streak), and all
+   Row-Level-Security policies. A common cause of write failures is RLS being
+   enabled while the owner policies are missing — which denies every write;
+   this restores them. It changes no existing data and is safe to re-run.
 
 With the CLI instead:
 
