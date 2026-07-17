@@ -228,6 +228,11 @@ export class SupabaseRepository implements StorageRepository {
       .from("test_sessions")
       .select("book_id, correct, wrong, created_at")
       .eq("user_id", this.userId);
+    if (error) {
+      // Surface the real cause (missing table, RLS, etc.) instead of an empty
+      // statistics page with no explanation.
+      console.error("Supabase loadSessions failed", error);
+    }
     if (error || !data) return [];
     return (data as { book_id: string; correct: number; wrong: number; created_at: string }[]).map(
       (r) => ({
@@ -254,17 +259,30 @@ export class SupabaseRepository implements StorageRepository {
         })
         .select("id")
         .single();
-      if (error || !data) return;
+      if (error || !data) {
+        // Surface the real cause (missing table, RLS, FK, etc.) so a failed
+        // cloud write doesn't silently leave the statistics page empty.
+        console.error("Supabase recordSession: test_sessions insert failed", error);
+        return;
+      }
 
       const sessionId = (data as { id: string }).id;
       if (session.answers.length) {
-        await this.supabase.from("test_answers").insert(
-          session.answers.map((a) => ({
-            session_id: sessionId,
-            word_id: a.wordId,
-            correct: a.correct,
-          }))
-        );
+        const { error: answersError } = await this.supabase
+          .from("test_answers")
+          .insert(
+            session.answers.map((a) => ({
+              session_id: sessionId,
+              word_id: a.wordId,
+              correct: a.correct,
+            }))
+          );
+        if (answersError) {
+          console.error(
+            "Supabase recordSession: test_answers insert failed",
+            answersError
+          );
+        }
       }
     } catch (err) {
       console.error("Supabase recordSession failed", err);

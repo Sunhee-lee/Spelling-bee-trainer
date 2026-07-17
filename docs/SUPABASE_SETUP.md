@@ -72,6 +72,11 @@ order (copy-paste their contents), or use the Supabase CLI.
    Completed Today) are computed by aggregating existing rows — the daily
    boundary uses the **Asia/Seoul** timezone — so no schema change is required
    for them.
+6. `supabase/migrations/0006_ensure_test_history.sql` — **run this if the
+   Statistics page stays empty after completing tests.** It idempotently
+   (re)creates the `test_sessions` / `test_answers` tables, their indexes, and
+   RLS policies, so a project set up without them gets working statistics. Safe
+   to run even if they already exist.
 
 With the CLI instead:
 

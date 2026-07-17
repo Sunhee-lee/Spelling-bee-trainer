@@ -69,7 +69,7 @@ export function BookDashboardPanel({
         <CardContent className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-semibold text-muted-foreground">
-              {t("book.learningProgress")}
+              {t("book.masteryProgress")}
             </span>
             {currentStreak >= 2 && (
               <span className="inline-flex items-center gap-1 rounded-full bg-bee/20 px-2.5 py-1 text-xs font-bold">
