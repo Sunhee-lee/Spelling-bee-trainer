@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useBookId } from "@/lib/useBookId";
 import { BookOpen, Lock, Plus, Search, Upload } from "lucide-react";
 
 import { useAppState, useBook } from "@/store/useVocabStore";
@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export default function ManageWordsPage() {
-  const params = useParams<{ bookId: string }>();
-  const { book, hydrated } = useBook(params.bookId);
+  const bookId = useBookId();
+  const { book, hydrated } = useBook(bookId);
   const { state } = useAppState();
   const { t } = useTranslation();
 

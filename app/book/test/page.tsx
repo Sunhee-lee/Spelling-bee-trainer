@@ -2,7 +2,9 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+
+import { useBookId } from "@/lib/useBookId";
 import {
   BookOpen,
   Check,
@@ -52,14 +54,14 @@ function parseMode(value: string | null): Mode {
 }
 
 function TestRunner() {
-  const params = useParams<{ bookId: string }>();
+  const bookId = useBookId();
   const searchParams = useSearchParams();
   const mode = parseMode(searchParams.get("mode"));
 
   const { state, hydrated } = useAppState();
   const actions = useActions();
   const { t } = useTranslation();
-  const book = state.books.find((b) => b.id === params.bookId);
+  const book = state.books.find((b) => b.id === bookId);
 
   const [questions, setQuestions] = useState<Word[] | null>(null);
   const [index, setIndex] = useState(0);

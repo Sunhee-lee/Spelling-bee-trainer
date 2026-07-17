@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useBookId } from "@/lib/useBookId";
 import { Search, Trophy } from "lucide-react";
 
 import { useBook } from "@/store/useVocabStore";
@@ -15,8 +15,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 export default function MasterCollectionPage() {
-  const params = useParams<{ bookId: string }>();
-  const { book, hydrated } = useBook(params.bookId);
+  const bookId = useBookId();
+  const { book, hydrated } = useBook(bookId);
   const { t } = useTranslation();
 
   if (!hydrated) {

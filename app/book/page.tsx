@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useBookId } from "@/lib/useBookId";
 import { BookOpen, ClipboardCheck, Lock, Play, Search } from "lucide-react";
 
 import type { Book } from "@/types";
@@ -90,10 +90,10 @@ function LockedBookScreen({ book, prerequisite }: { book: Book; prerequisite?: B
 }
 
 export default function BookDashboardPage() {
-  const params = useParams<{ bookId: string }>();
+  const bookId = useBookId();
   const { state, hydrated } = useAppState();
   const { t } = useTranslation();
-  const book = state.books.find((b) => b.id === params.bookId);
+  const book = state.books.find((b) => b.id === bookId);
 
   if (!hydrated) {
     return (
