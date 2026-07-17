@@ -39,7 +39,7 @@ export const en: typeof ko = {
   book: {
     remaining: "{count} words remaining until {book} is fully mastered.",
     fullyMastered: "{book} is fully mastered!",
-    learningProgress: "Learning Progress",
+    masteryProgress: "Mastery Progress",
     noVocabAdded: "No words added yet.",
     noVocabHint: "Add your first word\nto start practicing.",
     addWords: "Add Word",

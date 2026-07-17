@@ -38,7 +38,7 @@ export const ko = {
   book: {
     remaining: "{book} 완성까지 {count}개 남았어요.",
     fullyMastered: "{book}를 모두 마스터했어요!",
-    learningProgress: "학습 진행도",
+    masteryProgress: "마스터 진행도",
     noVocabAdded: "아직 추가된 단어가 없어요.",
     noVocabHint: "첫 번째 단어를 추가하면\n바로 연습을 시작할 수 있어요.",
     addWords: "단어 추가하기",
