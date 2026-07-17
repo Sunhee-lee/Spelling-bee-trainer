@@ -1,6 +1,7 @@
-import type { AppSettings, AppState, Book, Word } from "@/types";
+import type { AppSettings, AppState, Book, StreakState, Word } from "@/types";
 import { createId } from "@/services/id";
 import { DEFAULT_SETTINGS, STATE_VERSION, createInitialState } from "@/storage/seed";
+import { EMPTY_STREAK } from "@/services/streak";
 
 /**
  * Normalize an arbitrary persisted value into a valid {@link AppState}.
@@ -22,6 +23,21 @@ export function migrateState(raw: unknown): AppState {
     version: STATE_VERSION,
     books,
     settings: migrateSettings(raw.settings),
+    streak: migrateStreak(raw.streak),
+  };
+}
+
+/** Normalize a persisted streak (older data has none → safe defaults). */
+function migrateStreak(raw: unknown): StreakState {
+  if (!isRecord(raw)) return { ...EMPTY_STREAK };
+  const lastStudyDate =
+    typeof raw.lastStudyDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.lastStudyDate)
+      ? raw.lastStudyDate
+      : null;
+  return {
+    currentStreak: toNonNegativeInt(raw.currentStreak, 0),
+    longestStreak: toNonNegativeInt(raw.longestStreak, 0),
+    lastStudyDate,
   };
 }
 

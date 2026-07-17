@@ -1,4 +1,4 @@
-import type { AppSettings, AppState, Book, Word } from "@/types";
+import type { AppSettings, AppState, Book, StreakState, Word } from "@/types";
 import type { ParsedEntry } from "@/services/vocabIO";
 import type {
   StorageRepository,
@@ -10,6 +10,7 @@ import { migrateState } from "@/storage/migrate";
 import { createId } from "@/services/id";
 import { createWord, gradeWord, type Grade } from "@/services/srs";
 import { applyLocks } from "@/services/stats";
+import { applyStudyDay } from "@/services/streak";
 
 export type ImportStrategy = "skip" | "replace";
 
@@ -277,6 +278,22 @@ export class VocabStore {
   /** Advance the book's test counter. Call once when a test finishes. */
   completeTest(bookId: string): void {
     this.updateBook(bookId, (b) => ({ ...b, currentTest: b.currentTest + 1 }));
+  }
+
+  /**
+   * Record that the learner completed a test today, updating the daily streak.
+   *
+   * Idempotent by design: {@link applyStudyDay} is a no-op when today is already
+   * the recorded study day, so multiple completed tests, wrong-answer retries,
+   * and result-screen refreshes on the same calendar date never double-count.
+   * Returns the resulting streak so the caller can show the up-to-date value.
+   */
+  registerStudyDay(): StreakState {
+    const streak = applyStudyDay(this.state.streak, new Date());
+    if (streak !== this.state.streak) {
+      this.commit({ ...this.state, streak });
+    }
+    return streak;
   }
 
   // --- Progress & data actions --------------------------------------------

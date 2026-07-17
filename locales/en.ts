@@ -118,6 +118,22 @@ export const en: typeof ko = {
     practiceWrong: "Practice wrong words ({count})",
     finish: "Finish",
     home: "Home",
+    // Phase 3 result screen
+    msgPerfect: "🌟 Perfect Score!",
+    msgGreat: "🎉 Great Job!",
+    msgFinish: "👏 You Finished Strong!",
+    completeToday: "Today’s Practice is complete.",
+    completeFull: "Full Test is complete.",
+    completeMaster: "Master Check is complete.",
+    completeRetry: "Retry complete.",
+    questionsCompleted: "{count} questions completed",
+    correctWrongLine: "{correct} correct · {wrong} wrong",
+    newMasterTitle: "🏆 Newly Mastered!",
+    practiceAgainTitle: "Words to Practice Again",
+    practiceAgainHint: "🌱 You can practice again",
+    retryWrong: "Retry Wrong Answers",
+    continueLearning: "Continue Learning",
+    backToDashboard: "Back to Dashboard",
     lockedTitle: "This book is locked",
     nothingToPractice: "Nothing to practice",
     lockedDesc: "Master all of Basic 100 to unlock this book.",
@@ -131,6 +147,10 @@ export const en: typeof ko = {
     noMasterDesc:
       "Answer the same word correctly 4 times in a row,\nand it will appear here.",
     backToBook: "Back to {book}",
+  },
+  streak: {
+    dayStreak: "🔥 {count} Day Streak",
+    onStreak: "🔥 You’re on a {count}-day streak!",
   },
   settings: {
     title: "Settings",

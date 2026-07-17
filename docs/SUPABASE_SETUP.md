@@ -50,7 +50,7 @@ notice instead of numbers. Add the same variable in Vercel's project settings
 
 ## 2. Run the SQL migrations
 
-Supabase Dashboard → **SQL Editor** → **New query**. Run these two files in
+Supabase Dashboard → **SQL Editor** → **New query**. Run these files in
 order (copy-paste their contents), or use the Supabase CLI.
 
 1. `supabase/migrations/0001_initial_schema.sql` — tables, indexes, and the
@@ -58,6 +58,12 @@ order (copy-paste their contents), or use the Supabase CLI.
    signup).
 2. `supabase/migrations/0002_rls_policies.sql` — enables Row Level Security and
    the owner-only policies.
+3. `supabase/migrations/0003_settings_language.sql` — adds the cloud-synced UI
+   `language` column to `settings`.
+4. `supabase/migrations/0004_settings_streak.sql` — adds the daily learning
+   streak columns (`current_streak`, `longest_streak`, `last_study_date`) to
+   `settings`. Existing rows are backfilled with safe defaults (0 / 0 / null),
+   so no vocabulary progress is touched. RLS is unchanged.
 
 With the CLI instead:
 

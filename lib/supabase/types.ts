@@ -38,6 +38,11 @@ export interface SettingsRow {
   master_review_rate: number;
   shuffle_questions: boolean;
   language: string;
+  /** Daily learning streak (Phase 3). */
+  current_streak: number;
+  longest_streak: number;
+  /** Local calendar date "YYYY-MM-DD", or null. */
+  last_study_date: string | null;
   created_at?: string;
   updated_at?: string;
 }

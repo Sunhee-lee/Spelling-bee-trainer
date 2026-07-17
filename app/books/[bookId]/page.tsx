@@ -113,7 +113,10 @@ export default function BookDashboardPage() {
         subtitle={t("common.wordsCount", { count: book.words.length })}
       />
 
-      <BookDashboardPanel book={book} />
+      <BookDashboardPanel
+        book={book}
+        currentStreak={state.streak.currentStreak}
+      />
 
       {/* Book options only for user-created books (built-in names stay fixed). */}
       {!book.builtIn && (

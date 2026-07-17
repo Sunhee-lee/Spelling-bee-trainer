@@ -19,6 +19,8 @@ import { Progress } from "@/components/ui/progress";
 
 interface BookDashboardPanelProps {
   book: Book;
+  /** Current daily learning streak; a small chip shows only when >= 2. */
+  currentStreak?: number;
 }
 
 /**
@@ -27,7 +29,10 @@ interface BookDashboardPanelProps {
  * action, a secondary Full Test, a Master Words card, and a small Manage
  * Words link. Empty books show a friendly "add words" state instead of 0 / 0.
  */
-export function BookDashboardPanel({ book }: BookDashboardPanelProps) {
+export function BookDashboardPanel({
+  book,
+  currentStreak = 0,
+}: BookDashboardPanelProps) {
   const { t } = useTranslation();
   const stats = computeBookStats(book);
   const isEmpty = stats.total === 0;
@@ -61,9 +66,16 @@ export function BookDashboardPanel({ book }: BookDashboardPanelProps) {
       {/* Learning progress */}
       <Card>
         <CardContent className="flex flex-col gap-3">
-          <span className="text-sm font-semibold text-muted-foreground">
-            {t("book.learningProgress")}
-          </span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-semibold text-muted-foreground">
+              {t("book.learningProgress")}
+            </span>
+            {currentStreak >= 2 && (
+              <span className="rounded-full bg-bee/20 px-2.5 py-1 text-xs font-bold">
+                {t("streak.dayStreak", { count: currentStreak })}
+              </span>
+            )}
+          </div>
           <Progress value={stats.progress} indicatorClassName="bg-bee" />
           <div className="flex items-end justify-between">
             <span className="text-3xl font-extrabold tabular-nums">
