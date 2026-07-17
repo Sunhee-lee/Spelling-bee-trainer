@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useBookId } from "@/lib/useBookId";
-import { BookOpen, ClipboardCheck, Lock, Play, Search } from "lucide-react";
+import {
+  BookOpen,
+  ClipboardCheck,
+  GraduationCap,
+  Lock,
+  Play,
+  Search,
+} from "lucide-react";
 
 import type { Book } from "@/types";
 import { useAppState } from "@/store/useVocabStore";
@@ -45,13 +52,22 @@ function LockedBookScreen({ book, prerequisite }: { book: Book; prerequisite?: B
         </p>
       </Card>
 
-      {/* Learning actions are disabled while practice is locked. */}
+      {/* Tests are disabled while practice is locked… */}
       <Button size="xl" className="w-full py-5" disabled>
         <Play className="fill-current" /> {t("book.todayPractice")}
       </Button>
       <Button size="lg" variant="outline" className="w-full" disabled>
         <ClipboardCheck /> {t("book.fullTest")}
       </Button>
+
+      {/* …but flashcard learning stays available (only testing is locked). */}
+      {book.words.length > 0 && (
+        <Button asChild size="lg" variant="outline" className="w-full">
+          <Link href={`/learn/${book.id}`}>
+            <GraduationCap /> {t("learn.title")}
+          </Link>
+        </Button>
+      )}
 
       {/* Words can be managed in advance. */}
       <Button asChild size="lg" className="w-full">

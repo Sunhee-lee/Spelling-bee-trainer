@@ -2,18 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-/** Reactively track the user's reduced-motion preference. */
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(mq.matches);
-    update();
-    mq.addEventListener?.("change", update);
-    return () => mq.removeEventListener?.("change", update);
-  }, []);
-  return reduced;
-}
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 const COLORS = [
   "var(--bee)",

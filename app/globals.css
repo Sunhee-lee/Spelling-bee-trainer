@@ -138,3 +138,13 @@ body {
   .sbt-confetti-piece,
   .sbt-sparkle { animation: none; display: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   Learn flashcard — a subtle cross-fade between the two stacked faces. No 3D
+   transform and no layout shift (both faces share one grid cell), so it stays
+   calm and gentle. Disabled under prefers-reduced-motion (instant swap).
+--------------------------------------------------------------------------- */
+.sbt-card-face { transition: opacity 200ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .sbt-card-face { transition: none; }
+}
