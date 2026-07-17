@@ -59,6 +59,13 @@ export class VocabStore {
   private hydrating = false;
   /** Guards against a stale (superseded) load overwriting a newer one. */
   private loadToken = 0;
+  /**
+   * Device-local mirror of test history. When signed in, cloud writes can fail
+   * silently (misconfigured DB, RLS, offline blip); this keeps statistics
+   * working from a local copy. When signed out the active repo already is
+   * LocalStorage, so we never double-write to it.
+   */
+  private readonly localHistory = new LocalStorageRepository();
 
   constructor(repo: StorageRepository) {
     this.repo = repo;
@@ -141,14 +148,30 @@ export class VocabStore {
   /** Record a finished test in history (best-effort; ignored by no-op backends). */
   recordSession(session: TestSessionRecord): void {
     void this.repo.recordSession?.(session);
+    // Keep a local copy too when the active backend is the cloud, so a failed
+    // cloud write never silently loses the record. (Signed out, the active repo
+    // already IS local storage — writing again would double-count.)
+    if (!(this.repo instanceof LocalStorageRepository)) {
+      void this.localHistory.recordSession(session);
+    }
   }
 
   /** Load completed sessions from the active backend (for the statistics page). */
   async loadSessions(): Promise<StoredSession[]> {
     try {
-      return (await this.repo.loadSessions?.()) ?? [];
+      const primary = (await this.repo.loadSessions?.()) ?? [];
+      // Cloud returned nothing (empty or failed) → fall back to the local
+      // mirror so a misconfigured backend doesn't show an empty stats page.
+      if (primary.length || this.repo instanceof LocalStorageRepository) {
+        return primary;
+      }
+      return (await this.localHistory.loadSessions()) ?? [];
     } catch {
-      return [];
+      try {
+        return (await this.localHistory.loadSessions()) ?? [];
+      } catch {
+        return [];
+      }
     }
   }
 
@@ -344,6 +367,10 @@ export class VocabStore {
       try {
         await this.repo.clear();
         await this.repo.save(seed);
+        // Also wipe the local history mirror (no-op if it's the active repo).
+        if (!(this.repo instanceof LocalStorageRepository)) {
+          await this.localHistory.clear();
+        }
       } catch (err) {
         console.error("Failed to clear data", err);
       }
