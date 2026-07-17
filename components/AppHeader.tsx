@@ -5,10 +5,13 @@ import { ArrowLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
+import { Mascot } from "@/components/Mascot";
 
 interface AppHeaderProps {
   title: string;
   emoji?: string;
+  /** Show the app mascot instead of an emoji (the brand character). */
+  mascot?: boolean;
   subtitle?: string;
   /** When set, shows a back button linking here. */
   backHref?: string;
@@ -21,6 +24,7 @@ interface AppHeaderProps {
 export function AppHeader({
   title,
   emoji,
+  mascot,
   subtitle,
   backHref,
   action,
@@ -40,7 +44,11 @@ export function AppHeader({
       )}
       <div className="min-w-0 flex-1">
         <h1 className="flex items-center gap-2 text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
-          {emoji && <span aria-hidden>{emoji}</span>}
+          {mascot ? (
+            <Mascot className="size-8 sm:size-9" />
+          ) : (
+            emoji && <span aria-hidden>{emoji}</span>
+          )}
           <span className="truncate">{title}</span>
         </h1>
         {subtitle && (
