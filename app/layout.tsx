@@ -39,7 +39,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Spelling Bee",
-    title: "Spelling Bee",
+    // Link-preview (shared-link) title, per user request.
+    title: "Spelling Bee Trainer",
     description: OG_DESCRIPTION,
     url: SITE_URL,
     locale: "ko_KR",
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Spelling Bee",
+    title: "Spelling Bee Trainer",
     description: OG_DESCRIPTION,
   },
 };
