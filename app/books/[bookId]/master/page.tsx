@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Search, Sprout, Trophy } from "lucide-react";
+import { Search, Trophy } from "lucide-react";
 
 import { useBook } from "@/store/useVocabStore";
 import { computeBookStats } from "@/services/stats";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
+import { HiveBeeIcon } from "@/components/HiveBeeIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -72,7 +73,7 @@ export default function MasterCollectionPage() {
 
       {mastered.length === 0 ? (
         <EmptyState
-          icon={<Sprout className="text-grass" />}
+          icon={<HiveBeeIcon />}
           title={t("master.noMasterYet")}
           description={t("master.noMasterDesc")}
         >

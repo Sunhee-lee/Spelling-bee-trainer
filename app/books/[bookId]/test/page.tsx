@@ -8,6 +8,7 @@ import {
   Check,
   Eye,
   Flame,
+  Hexagon,
   LayoutDashboard,
   Lock,
   NotebookPen,
@@ -16,7 +17,6 @@ import {
   RotateCcw,
   Search,
   Sparkles,
-  Sprout,
   Star,
   Trophy,
   X,
@@ -382,7 +382,7 @@ function TestRunner() {
         {demoted.length > 0 && (
           <div className="rounded-2xl border border-grass/40 bg-grass/10 px-5 py-4">
             <p className="flex items-center gap-2 font-bold">
-              <Sprout className="size-5 text-grass" />
+              <Hexagon className="size-5 text-grass" />
               {t("test.practiceAgainTitle")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
