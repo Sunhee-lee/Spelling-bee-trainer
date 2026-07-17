@@ -64,6 +64,14 @@ order (copy-paste their contents), or use the Supabase CLI.
    streak columns (`current_streak`, `longest_streak`, `last_study_date`) to
    `settings`. Existing rows are backfilled with safe defaults (0 / 0 / null),
    so no vocabulary progress is touched. RLS is unchanged.
+5. `supabase/migrations/0005_admin_stats_indexes.sql` — **optional.** Adds
+   indexes that speed up the admin dashboard's aggregate reads (sessions by
+   user/date, mastered-word counts, streak dates). No columns, counters, or
+   data change, and RLS is unchanged; skip it if you don't use the admin
+   dashboard. The Phase 4 admin metrics (New Users / Active Users / Tests
+   Completed Today) are computed by aggregating existing rows — the daily
+   boundary uses the **Asia/Seoul** timezone — so no schema change is required
+   for them.
 
 With the CLI instead:
 

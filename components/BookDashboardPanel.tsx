@@ -87,7 +87,9 @@ export function BookDashboardPanel({
             <span className="text-sm font-semibold text-muted-foreground">
               {isComplete
                 ? t("book.fullyMastered", { book: book.name })
-                : t("book.remainingShort", { count: remaining })}
+                : t(remaining === 1 ? "book.remainingOne" : "book.remainingShort", {
+                    count: remaining,
+                  })}
             </span>
           </div>
         </CardContent>
@@ -143,6 +145,18 @@ export function BookDashboardPanel({
           </CardContent>
         </Card>
       </Link>
+
+      {/* Statistics — small secondary link, below the learning actions */}
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="self-center text-muted-foreground"
+      >
+        <Link href={`/statistics?book=${book.id}`}>
+          📊 {t("stats.link")}
+        </Link>
+      </Button>
 
       {/* Manage words — small secondary link, kept apart from learning */}
       <Button

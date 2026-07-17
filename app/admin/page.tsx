@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BookOpen, RefreshCw, ShieldCheck, Type, Users } from "lucide-react";
+import {
+  Activity,
+  BookOpen,
+  CalendarCheck,
+  RefreshCw,
+  ShieldCheck,
+  Type,
+  UserPlus,
+  Users,
+} from "lucide-react";
 
 import { useAuth } from "@/auth/AuthProvider";
 import { isAdminEmail } from "@/lib/admin";
@@ -20,14 +29,19 @@ interface AdminUser {
   completedTests: number;
   mastered: number;
   totalWords: number;
+  currentStreak: number;
 }
 
 interface Stats {
   configured: boolean;
+  timezone?: string;
   totalUsers?: number;
   totalBooks?: number;
   totalWords?: number;
   totalSessions?: number;
+  newUsersToday?: number;
+  activeUsersToday?: number;
+  testsCompletedToday?: number;
   users?: AdminUser[];
 }
 
@@ -192,6 +206,30 @@ export default function AdminPage() {
             />
           </div>
 
+          {/* Today's activity (Asia/Seoul boundary) */}
+          <section className="flex flex-col gap-3">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+              {t("admin.todayHeading")}
+            </h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <StatCard
+                icon={<UserPlus />}
+                label={t("admin.newUsersToday")}
+                value={stats.newUsersToday ?? 0}
+              />
+              <StatCard
+                icon={<Activity />}
+                label={t("admin.activeUsersToday")}
+                value={stats.activeUsersToday ?? 0}
+              />
+              <StatCard
+                icon={<CalendarCheck />}
+                label={t("admin.testsCompletedToday")}
+                value={stats.testsCompletedToday ?? 0}
+              />
+            </div>
+          </section>
+
           {/* User list */}
           <section className="flex flex-col gap-3">
             <h2 className="text-lg font-bold">
@@ -218,6 +256,9 @@ export default function AdminPage() {
                           <th className="px-4 py-3 text-right">
                             {t("admin.masterProgress")}
                           </th>
+                          <th className="px-4 py-3 text-right">
+                            {t("admin.currentStreak")}
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -235,6 +276,9 @@ export default function AdminPage() {
                             </td>
                             <td className="px-4 py-3 text-right tabular-nums">
                               {u.mastered} / {u.totalWords}
+                            </td>
+                            <td className="px-4 py-3 text-right tabular-nums">
+                              {u.currentStreak > 0 ? `🔥 ${u.currentStreak}` : u.currentStreak}
                             </td>
                           </tr>
                         ))}
@@ -273,6 +317,14 @@ export default function AdminPage() {
                           </dt>
                           <dd className="text-right tabular-nums">
                             {u.mastered} / {u.totalWords}
+                          </dd>
+                          <dt className="text-muted-foreground">
+                            {t("admin.currentStreak")}
+                          </dt>
+                          <dd className="text-right tabular-nums">
+                            {u.currentStreak > 0
+                              ? `🔥 ${u.currentStreak}`
+                              : u.currentStreak}
                           </dd>
                         </dl>
                       </CardContent>

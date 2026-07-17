@@ -9,6 +9,20 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// "Today" for the owner dashboard is a fixed application timezone (Asia/Seoul),
+// so the daily metrics line up with the owner's local day regardless of where
+// the server runs.
+const ADMIN_TIMEZONE = "Asia/Seoul";
+function seoulDateKey(d: Date): string {
+  // en-CA renders as YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ADMIN_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
 /**
  * Admin-only aggregate stats. This is NOT a public endpoint:
  *  - it requires the caller's Supabase access token,
@@ -75,12 +89,22 @@ export async function GET(request: Request) {
     if (data.users.length < 200) break;
   }
 
-  // Aggregate sessions + words once, in memory (small, admin-only dataset).
-  const [sessionsRes, wordsRes, totalBooks] = await Promise.all([
+  // Aggregate sessions + words + per-user streak once, in memory (small,
+  // admin-only dataset).
+  const [sessionsRes, wordsRes, settingsRes, totalBooks] = await Promise.all([
     admin.from("test_sessions").select("user_id, created_at"),
     admin.from("words").select("user_id, mastered"),
+    admin.from("settings").select("user_id, current_streak"),
     count("vocabulary_books"),
   ]);
+
+  const streakByUser = new Map<string, number>();
+  for (const r of (settingsRes.data ?? []) as {
+    user_id: string;
+    current_streak: number | null;
+  }[]) {
+    streakByUser.set(r.user_id, r.current_streak ?? 0);
+  }
 
   const agg = new Map<
     string,
@@ -89,15 +113,29 @@ export async function GET(request: Request) {
   for (const u of authUsers) {
     agg.set(u.id, { tests: 0, mastered: 0, total: 0, lastActive: null });
   }
-  for (const s of (sessionsRes.data ?? []) as {
+
+  // Daily metrics use the fixed application timezone.
+  const today = seoulDateKey(new Date());
+  let testsCompletedToday = 0;
+  const activeUserIdsToday = new Set<string>();
+
+  const sessionRows = (sessionsRes.data ?? []) as {
     user_id: string;
     created_at: string;
-  }[]) {
+  }[];
+  for (const s of sessionRows) {
     const e = agg.get(s.user_id);
     if (!e) continue;
     e.tests += 1;
     if (!e.lastActive || s.created_at > e.lastActive) e.lastActive = s.created_at;
+    if (seoulDateKey(new Date(s.created_at)) === today) {
+      testsCompletedToday += 1;
+      activeUserIdsToday.add(s.user_id);
+    }
   }
+  const newUsersToday = authUsers.filter(
+    (u) => seoulDateKey(new Date(u.created_at)) === today
+  ).length;
   let totalWords = 0;
   for (const w of (wordsRes.data ?? []) as {
     user_id: string;
@@ -120,6 +158,7 @@ export async function GET(request: Request) {
         completedTests: e.tests,
         mastered: e.mastered,
         totalWords: e.total,
+        currentStreak: streakByUser.get(u.id) ?? 0,
       };
     })
     // Sort by last active, most recent first; users with no activity last.
@@ -131,10 +170,14 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     configured: true,
+    timezone: ADMIN_TIMEZONE,
     totalUsers: authUsers.length,
     totalBooks,
     totalWords,
-    totalSessions: (sessionsRes.data ?? []).length,
+    totalSessions: sessionRows.length,
+    newUsersToday,
+    activeUsersToday: activeUserIdsToday.size,
+    testsCompletedToday,
     users,
   });
 }

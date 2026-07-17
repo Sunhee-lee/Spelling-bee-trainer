@@ -28,10 +28,13 @@ export function AccountSection() {
         ) : user ? (
           <>
             <p className="flex items-center gap-2 text-sm font-bold text-success">
-              <Cloud className="size-4" /> {t("common.cloudSync")}
+              <Cloud className="size-4" /> {t("account.syncedTitle")}
             </p>
+            {user.email && (
+              <p className="text-sm font-semibold">{user.email}</p>
+            )}
             <p className="text-sm text-muted-foreground">
-              {t("account.syncedDesc", { email: user.email ?? "" })}
+              {t("account.syncedDesc")}
             </p>
             <Button variant="outline" onClick={() => void signOut()}>
               <LogOut /> {t("account.logout")}

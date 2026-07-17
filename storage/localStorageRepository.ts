@@ -1,5 +1,9 @@
 import type { AppState } from "@/types";
-import type { StorageRepository, TestSessionRecord } from "@/storage/repository";
+import type {
+  StorageRepository,
+  StoredSession,
+  TestSessionRecord,
+} from "@/storage/repository";
 import { migrateState } from "@/storage/migrate";
 
 const STORAGE_KEY = "spelling-bee-trainer/state";
@@ -75,6 +79,26 @@ export class LocalStorageRepository implements StorageRepository {
       window.localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
     } catch {
       // Ignore.
+    }
+  }
+
+  async loadSessions(): Promise<StoredSession[]> {
+    if (!this.available()) return [];
+    try {
+      const raw = window.localStorage.getItem(HISTORY_KEY);
+      if (!raw) return [];
+      const history = JSON.parse(raw);
+      if (!Array.isArray(history)) return [];
+      return history
+        .filter((h): h is Record<string, unknown> => !!h && typeof h === "object")
+        .map((h) => ({
+          bookId: typeof h.bookId === "string" ? h.bookId : "",
+          correct: typeof h.correct === "number" ? h.correct : 0,
+          wrong: typeof h.wrong === "number" ? h.wrong : 0,
+          createdAt: typeof h.createdAt === "number" ? h.createdAt : 0,
+        }));
+    } catch {
+      return [];
     }
   }
 }
