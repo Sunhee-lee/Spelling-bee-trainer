@@ -13,6 +13,7 @@ export const ko = {
     on: "켜짐",
     off: "꺼짐",
     continueOffline: "오프라인으로 계속하기",
+    continue: "계속",
     locked: "잠김",
     loading: "불러오는 중…",
     settings: "설정",
@@ -145,8 +146,7 @@ export const ko = {
     questionsUnit: "{count}문제",
     about: "정보",
     aboutName: "스펠링 비 트레이너 🐝",
-    aboutBody:
-      "어린 학습자를 위한 친근한 스펠링 연습 앱이에요. 선생님이 뜻을 읽어주면 학생이 영어 단어를 말하고 스펠링을 말한 뒤, 어른이 ⭕ 또는 ❌를 눌러요.",
+    aboutBody: "어린 학습자를 위한 친근한 스펠링 연습 앱이에요.",
     version: "버전",
     privacyPolicy: "개인정보 처리방침",
     privacyBody:
@@ -166,14 +166,21 @@ export const ko = {
     deleteDesc: "단어장과 모든 단어가 영구 삭제돼요.",
   },
   dataManagement: {
-    clearProgress: "학습 진행도 모두 초기화",
-    clearProgressTitle: "학습 진행도를 모두 초기화할까요?",
+    clearProgress: "학습 진행도 초기화",
+    clearProgressDescription:
+      "단어는 그대로 두고, 마스터·연속 정답·SRS 진행도·테스트 기록을 초기화해요.",
+    clearProgressTitle: "학습 진행도를 초기화할까요?",
     clearProgressDesc:
       "모든 단어장의 테스트 번호·마스터 상태·레벨·연속 정답을 초기화해요. 단어는 그대로 유지돼요.",
     clearEverything: "전체 삭제",
+    clearEverythingDescription:
+      "모든 단어장·단어·설정·학습 진행도를 삭제해요.",
     clearEverythingTitle: "전체를 삭제할까요?",
     clearEverythingDesc:
-      "이 기기의 모든 단어장과 단어를 삭제하고 Basic 100과 Supplemental List로 새로 시작해요. 되돌릴 수 없어요.",
+      "모든 단어장·단어·설정·학습 진행도가 삭제되고 Basic 100과 Supplemental List로 새로 시작해요.",
+    clearFinalTitle: "정말 전체를 삭제할까요?",
+    clearFinalDesc: "이 작업은 절대 되돌릴 수 없어요. 계속하려면 아래를 눌러 주세요.",
+    clearFinalAction: "네, 전체 삭제",
   },
   backup: {
     exportBackup: "백업 내보내기 (JSON)",
@@ -270,5 +277,13 @@ export const ko = {
     notConfigured:
       "관리자 통계는 서버의 서비스 역할 키가 필요해요. SUPABASE_SERVICE_ROLE_KEY를 설정하세요 (docs/SUPABASE_SETUP.md 참고).",
     loadError: "통계를 불러오지 못했어요.",
+    userAccounts: "사용자 계정",
+    email: "이메일",
+    signupDate: "가입일",
+    lastActive: "마지막 접속",
+    completedTests: "완료 테스트",
+    masterProgress: "마스터 진행률",
+    today: "오늘",
+    noUsers: "아직 등록된 사용자가 없어요",
   },
 };

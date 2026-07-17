@@ -14,6 +14,7 @@ export const en: typeof ko = {
     on: "On",
     off: "Off",
     continueOffline: "Continue offline",
+    continue: "Continue",
     locked: "Locked",
     loading: "Loading…",
     settings: "Settings",
@@ -150,8 +151,7 @@ export const en: typeof ko = {
     questionsUnit: "{count} questions",
     about: "About",
     aboutName: "Spelling Bee Trainer 🐝",
-    aboutBody:
-      "A friendly spelling practice app for young learners. The teacher reads the meaning, the student says and spells the word, and a grown-up taps ⭕ or ❌.",
+    aboutBody: "A friendly spelling practice app for young learners.",
     version: "Version",
     privacyPolicy: "Privacy Policy",
     privacyBody:
@@ -172,14 +172,22 @@ export const en: typeof ko = {
     deleteDesc: "This permanently removes the book and all of its words.",
   },
   dataManagement: {
-    clearProgress: "Clear all learning progress",
-    clearProgressTitle: "Clear all learning progress?",
+    clearProgress: "Reset learning progress",
+    clearProgressDescription:
+      "Keeps your words. Resets mastery, streaks, SRS progress, and test history.",
+    clearProgressTitle: "Reset learning progress?",
     clearProgressDesc:
       "Resets test numbers, master status, levels, and streaks for every book. Your vocabulary words are kept.",
     clearEverything: "Clear everything",
+    clearEverythingDescription:
+      "Deletes all books, words, settings, and learning progress.",
     clearEverythingTitle: "Clear everything?",
     clearEverythingDesc:
-      "Deletes every book and word on this device and starts fresh with Basic 100 and the Supplemental List. This can’t be undone.",
+      "Deletes all books, words, settings, and progress, then starts fresh with Basic 100 and the Supplemental List.",
+    clearFinalTitle: "Really clear everything?",
+    clearFinalDesc:
+      "This can never be undone. Tap below to confirm you want to delete everything.",
+    clearFinalAction: "Yes, delete everything",
   },
   backup: {
     exportBackup: "Export backup (JSON)",
@@ -280,5 +288,13 @@ export const en: typeof ko = {
     notConfigured:
       "Admin stats need a server service-role key. Set SUPABASE_SERVICE_ROLE_KEY (see docs/SUPABASE_SETUP.md).",
     loadError: "Couldn’t load stats.",
+    userAccounts: "User Accounts",
+    email: "Email",
+    signupDate: "Signup Date",
+    lastActive: "Last Active",
+    completedTests: "Completed Tests",
+    masterProgress: "Master Progress",
+    today: "Today",
+    noUsers: "No users yet",
   },
 };
