@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import {
+  BarChart3,
   BookOpen,
   ChevronRight,
   ClipboardCheck,
+  Flame,
   Play,
   Plus,
   Trophy,
@@ -13,6 +15,7 @@ import {
 import type { Book } from "@/types";
 import { computeBookStats } from "@/services/stats";
 import { useTranslation } from "@/lib/i18n";
+import { SproutIcon } from "@/components/SproutIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -47,9 +50,7 @@ export function BookDashboardPanel({
           <span className="text-sm font-semibold text-muted-foreground">
             {t("book.learningProgress")}
           </span>
-          <div className="text-[3.5rem] leading-none" aria-hidden>
-            🌱
-          </div>
+          <SproutIcon className="size-14" />
           <p className="font-semibold">{t("book.noVocabAdded")}</p>
           <p className="whitespace-pre-line text-sm text-muted-foreground">
             {t("book.noVocabHint")}
@@ -74,7 +75,8 @@ export function BookDashboardPanel({
               {t("book.learningProgress")}
             </span>
             {currentStreak >= 2 && (
-              <span className="rounded-full bg-bee/20 px-2.5 py-1 text-xs font-bold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-bee/20 px-2.5 py-1 text-xs font-bold">
+                <Flame className="size-3.5 text-amber-500" />
                 {t("streak.dayStreak", { count: currentStreak })}
               </span>
             )}
@@ -157,7 +159,7 @@ export function BookDashboardPanel({
         className="self-center text-muted-foreground"
       >
         <Link href={`/statistics?book=${book.id}`}>
-          📊 {t("stats.link")}
+          <BarChart3 /> {t("stats.link")}
         </Link>
       </Button>
 

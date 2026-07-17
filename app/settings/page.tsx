@@ -8,6 +8,7 @@ import {
   Minus,
   Plus,
   RotateCcw,
+  Settings,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
@@ -129,7 +130,11 @@ export default function SettingsPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <AppHeader title={t("settings.title")} emoji="⚙️" backHref="/" />
+      <AppHeader
+        title={t("settings.title")}
+        icon={<Settings className="size-7 text-primary sm:size-8" />}
+        backHref="/"
+      />
 
       {!hydrated ? (
         <Card className="h-48 animate-pulse bg-muted/60" />

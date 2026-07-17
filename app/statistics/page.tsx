@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays } from "lucide-react";
+import { BarChart3, CalendarDays, Flame, Search } from "lucide-react";
 
 import type { StoredSession } from "@/storage/repository";
 import { useActions, useAppState } from "@/store/useVocabStore";
@@ -84,7 +84,7 @@ function StatisticsView() {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
         <EmptyState
-          emoji="🔍"
+          icon={<Search />}
           title={t("common.bookNotFound")}
           description={t("common.bookNotFoundDesc")}
         >
@@ -100,7 +100,7 @@ function StatisticsView() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <AppHeader title={t("stats.title")} emoji="📊" backHref="/" />
+      <AppHeader title={t("stats.title")} icon={<BarChart3 className="size-7 text-primary sm:size-8" />} backHref="/" />
 
       {/* Book selector (only when there is more than one book). */}
       {books.length > 1 ? (
@@ -123,7 +123,7 @@ function StatisticsView() {
 
       {bookStats.completedTests === 0 ? (
         <EmptyState
-          emoji="📊"
+          icon={<BarChart3 />}
           title={t("stats.emptyTitle")}
           description={t("stats.emptyDesc")}
         >
@@ -173,7 +173,8 @@ function StatisticsView() {
           {/* Account-wide streak */}
           <Card>
             <CardContent className="flex flex-col gap-3">
-              <span className="text-lg font-extrabold">
+              <span className="inline-flex items-center gap-2 text-lg font-extrabold">
+                <Flame className="size-5 text-amber-500" aria-hidden />
                 {t("stats.streakCurrentLine", { count: streak.currentStreak })}
               </span>
               <p className="text-sm font-semibold text-muted-foreground">

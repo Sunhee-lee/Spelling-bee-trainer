@@ -12,6 +12,8 @@ interface AppHeaderProps {
   emoji?: string;
   /** Show the app mascot instead of an emoji (the brand character). */
   mascot?: boolean;
+  /** A leading icon node (e.g. a lucide icon) instead of an emoji. */
+  icon?: React.ReactNode;
   subtitle?: string;
   /** When set, shows a back button linking here. */
   backHref?: string;
@@ -25,6 +27,7 @@ export function AppHeader({
   title,
   emoji,
   mascot,
+  icon,
   subtitle,
   backHref,
   action,
@@ -46,6 +49,10 @@ export function AppHeader({
         <h1 className="flex items-center gap-2 text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
           {mascot ? (
             <Mascot className="size-8 sm:size-9" />
+          ) : icon ? (
+            <span className="flex shrink-0 items-center" aria-hidden>
+              {icon}
+            </span>
           ) : (
             emoji && <span aria-hidden>{emoji}</span>
           )}

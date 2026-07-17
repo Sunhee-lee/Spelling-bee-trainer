@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Plus, Upload } from "lucide-react";
+import { BookOpen, Plus, Search, Upload } from "lucide-react";
 
 import { useBook } from "@/store/useVocabStore";
 import { useTranslation } from "@/lib/i18n";
@@ -32,7 +32,7 @@ export default function ManageWordsPage() {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
         <EmptyState
-          emoji="🔍"
+          icon={<Search />}
           title={t("common.bookNotFound")}
           description={t("common.bookNotFoundDesc")}
         >
@@ -79,7 +79,7 @@ export default function ManageWordsPage() {
       {/* Word list */}
       {book.words.length === 0 ? (
         <EmptyState
-          emoji="📖"
+          icon={<BookOpen />}
           title={t("words.noWordsYet")}
           description={t("words.noWordsDesc")}
         />

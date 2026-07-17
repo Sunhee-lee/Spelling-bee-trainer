@@ -4,12 +4,21 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
+  BookOpen,
   Check,
   Eye,
+  Flame,
   LayoutDashboard,
+  Lock,
+  NotebookPen,
+  PartyPopper,
   Play,
   RotateCcw,
+  Search,
+  Sparkles,
   Sprout,
+  Star,
+  Trophy,
   X,
 } from "lucide-react";
 
@@ -184,7 +193,7 @@ function TestRunner() {
   if (!book) {
     return (
       <main className="mx-auto w-full max-w-xl px-4 py-8 sm:px-6">
-        <EmptyState emoji="🔍" title={t("common.bookNotFound")}>
+        <EmptyState icon={<Search />} title={t("common.bookNotFound")}>
           <Button asChild>
             <Link href="/">{t("common.backToBooks")}</Link>
           </Button>
@@ -197,7 +206,7 @@ function TestRunner() {
     return (
       <main className="mx-auto w-full max-w-xl px-4 py-8 sm:px-6">
         <EmptyState
-          emoji={book.locked ? "🔒" : "📖"}
+          icon={book.locked ? <Lock /> : <BookOpen />}
           title={
             book.locked ? t("test.lockedTitle") : t("test.nothingToPractice")
           }
@@ -239,9 +248,7 @@ function TestRunner() {
         />
 
         <Card className="items-center gap-4 py-10 text-center">
-          <div className="text-5xl" aria-hidden>
-            📝
-          </div>
+          <NotebookPen className="size-12 text-primary" aria-hidden />
           <h1 className="text-2xl font-extrabold">{t(MODE_LABEL_KEY[effMode])}</h1>
           <p className="text-4xl font-extrabold tabular-nums">
             {t("test.questionCount", { count: total })}
@@ -285,13 +292,14 @@ function TestRunner() {
       : percent >= 80
         ? "test.msgGreat"
         : "test.msgFinish";
-    const bigEmoji = allCorrect
-      ? "🌟"
+    // Cross-device consistent hero icon (emoji render differs per OS font).
+    const HeroIcon = allCorrect
+      ? Star
       : newlyMastered.length > 0
-        ? "🏆"
+        ? Trophy
         : percent >= 80
-          ? "🎉"
-          : "👏";
+          ? PartyPopper
+          : Sparkles;
 
     // Mode-completion subtitle.
     const completeKey: TKey = isRetry
@@ -315,9 +323,7 @@ function TestRunner() {
         <Celebration intensity={intensity} />
 
         <Card className="sbt-pop-in items-center gap-3 py-10 text-center">
-          <div className="text-6xl" aria-hidden>
-            {bigEmoji}
-          </div>
+          <HeroIcon className="size-16 text-bee" aria-hidden />
           <h1 className="text-2xl font-extrabold">
             {isRetry && allCorrect ? t("test.allCorrected") : t(messageKey)}
           </h1>
@@ -347,7 +353,8 @@ function TestRunner() {
           </div>
 
           {showStreak && (
-            <p className="mt-1 rounded-full bg-bee/20 px-4 py-1.5 text-sm font-bold">
+            <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-bee/20 px-4 py-1.5 text-sm font-bold">
+              <Flame className="size-4 text-amber-500" aria-hidden />
               {t("streak.onStreak", { count: state.streak.currentStreak })}
             </p>
           )}
@@ -363,7 +370,7 @@ function TestRunner() {
             <ul className="mt-2 flex flex-col gap-1">
               {newlyMastered.map((word) => (
                 <li key={word.id} className="flex items-center gap-2 font-semibold">
-                  <span aria-hidden>⭐</span>
+                  <Star className="size-4 shrink-0 text-bee" aria-hidden />
                   {word.word}
                 </li>
               ))}
