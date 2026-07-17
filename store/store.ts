@@ -6,8 +6,21 @@ import type {
   TestSessionRecord,
 } from "@/storage/repository";
 import { LocalStorageRepository } from "@/storage/localStorageRepository";
+import { SupabaseRepository } from "@/storage/supabaseRepository";
 import { createInitialState } from "@/storage/seed";
 import { migrateState } from "@/storage/migrate";
+
+/**
+ * Durable local buffer of unsynced signed-in changes. Written on every commit
+ * while the cloud is the active backend and cleared once the cloud write is
+ * confirmed. On reload it lets us restore changes whose cloud write never
+ * landed (fast refresh, transient failure) instead of losing them — and it
+ * prevents (possibly empty/stale) cloud data from clobbering local work.
+ */
+const PENDING_KEY = "spelling-bee-trainer/pending";
+
+/** Result of a cloud sync attempt, broadcast to UI listeners. */
+export type SyncStatus = { ok: true } | { ok: false; error: unknown };
 import { createId } from "@/services/id";
 import { createWord, gradeWord, type Grade } from "@/services/srs";
 import { applyLocks } from "@/services/stats";
@@ -66,11 +79,96 @@ export class VocabStore {
    * LocalStorage, so we never double-write to it.
    */
   private readonly localHistory = new LocalStorageRepository();
+  /** UI subscribers for cloud-sync success/failure (for error toasts). */
+  private syncListeners = new Set<(status: SyncStatus) => void>();
 
   constructor(repo: StorageRepository) {
     this.repo = repo;
     // Deterministic pre-hydration snapshot for SSR + first client paint.
     this.state = createInitialState();
+    this.attachSyncListener();
+  }
+
+  // --- cloud-sync durability + status --------------------------------------
+
+  /** The signed-in user's id when the cloud is the active backend, else null. */
+  private cloudUserId(): string | null {
+    return this.repo instanceof SupabaseRepository ? this.repo.userId : null;
+  }
+
+  /** Wire the active repo's flush result to the durable buffer + UI status. */
+  private attachSyncListener(): void {
+    if (this.repo instanceof SupabaseRepository) {
+      this.repo.onSyncSettled = (error) => {
+        if (error == null) {
+          this.clearPending();
+          this.notifySync({ ok: true });
+        } else {
+          this.notifySync({ ok: false, error });
+        }
+      };
+    }
+  }
+
+  private writePending(state: AppState): void {
+    const uid = this.cloudUserId();
+    if (uid == null || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        PENDING_KEY,
+        JSON.stringify({ userId: uid, state })
+      );
+    } catch {
+      // Storage disabled/quota — best effort.
+    }
+  }
+
+  private clearPending(): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.removeItem(PENDING_KEY);
+    } catch {
+      // Ignore.
+    }
+  }
+
+  /** Unsynced buffered state for `uid`, or null if none/mismatched/corrupt. */
+  private readPending(uid: string): AppState | null {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem(PENDING_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { userId?: unknown; state?: unknown };
+      if (parsed?.userId === uid && parsed.state) {
+        return migrateState(parsed.state);
+      }
+    } catch {
+      // Corrupt buffer — ignore.
+    }
+    return null;
+  }
+
+  /** Subscribe to cloud-sync results (success/failure). Returns unsubscribe. */
+  subscribeSync = (cb: (status: SyncStatus) => void): (() => void) => {
+    this.syncListeners.add(cb);
+    return () => {
+      this.syncListeners.delete(cb);
+    };
+  };
+
+  private notifySync(status: SyncStatus): void {
+    this.syncListeners.forEach((l) => l(status));
+  }
+
+  /** Re-attempt the cloud write of the current state (used by the retry UI). */
+  retrySync(): void {
+    void this.repo.save(this.state);
+  }
+
+  /** Best-effort: push any debounced cloud write immediately (e.g. on unload). */
+  flushPendingSync(): void {
+    const r = this.repo as { flushNow?: () => Promise<void> };
+    void r.flushNow?.();
   }
 
   // --- useSyncExternalStore wiring -----------------------------------------
@@ -107,6 +205,19 @@ export class VocabStore {
     }
     // A newer load (e.g. a repository swap) started while we awaited — discard.
     if (token !== this.loadToken) return;
+
+    // Reconcile unsynced local work first: if the cloud write of an earlier
+    // change never confirmed, the durable buffer holds it. Restore it (never
+    // let cloud — possibly empty or stale — clobber unsynced local data) and
+    // re-attempt the sync.
+    const uid = this.cloudUserId();
+    const pending = uid ? this.readPending(uid) : null;
+    if (pending) {
+      this.state = { ...pending, books: applyLocks(pending.books, false) };
+      void this.repo.save(this.state);
+      return;
+    }
+
     if (loaded) {
       // Apply the one-way unlock latch so a restored/complete state is
       // consistent (never re-locks).
@@ -126,6 +237,10 @@ export class VocabStore {
    */
   async setRepository(repo: StorageRepository): Promise<void> {
     this.repo = repo;
+    this.attachSyncListener();
+    // Leaving the cloud (logout) → drop any buffered cloud-only changes so they
+    // never leak into a later session/user.
+    if (!(repo instanceof SupabaseRepository)) this.clearPending();
     await this.load();
     this.emit();
   }
@@ -142,6 +257,10 @@ export class VocabStore {
     const state = { ...next, books: applyLocks(next.books, false) };
     this.state = state;
     this.emit();
+    // Durably buffer the change for signed-in users BEFORE the (async, possibly
+    // failing) cloud write, so a refresh never loses it. Cleared once the cloud
+    // write is confirmed via onSyncSettled.
+    this.writePending(state);
     void this.repo.save(state);
   }
 

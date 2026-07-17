@@ -25,10 +25,16 @@ const FLUSH_DELAY_MS = 600;
 export class SupabaseRepository implements StorageRepository {
   private pending: AppState | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * Notified after every flush with the sync error, or `null` on success. The
+   * store uses this to clear its durable local buffer only once the cloud write
+   * is confirmed, and to surface failures to the user.
+   */
+  onSyncSettled: ((error: unknown) => void) | null = null;
 
   constructor(
     private readonly supabase: SupabaseClient,
-    private readonly userId: string
+    readonly userId: string
   ) {}
 
   // --- load ----------------------------------------------------------------
@@ -131,15 +137,22 @@ export class SupabaseRepository implements StorageRepository {
 
     try {
       await this.sync(state);
+      this.onSyncSettled?.(null);
     } catch (err) {
-      // Keep the app usable; surface for debugging.
+      // Surface for debugging AND tell the store so it keeps the unsynced data
+      // in its durable buffer and can notify the user.
       console.error("Supabase sync failed", err);
+      this.onSyncSettled?.(err);
     }
   }
 
   private async sync(state: AppState): Promise<void> {
-    // Settings (one row per user).
-    await this.supabase.from("settings").upsert(
+    // Settings (one row per user). Non-critical for vocabulary data: if the
+    // settings row fails (e.g. a column from a later migration is missing), we
+    // log it but must NOT abort — otherwise a settings problem would silently
+    // block every book/word write. (Supabase returns errors in `.error`; it
+    // does not throw, so each result must be checked explicitly.)
+    const settingsRes = await this.supabase.from("settings").upsert(
       {
         user_id: this.userId,
         questions_per_test: state.settings.questionsPerTest,
@@ -152,8 +165,13 @@ export class SupabaseRepository implements StorageRepository {
       },
       { onConflict: "user_id" }
     );
+    if (settingsRes.error) {
+      console.error("Supabase settings sync failed (continuing)", settingsRes.error);
+    }
 
-    // Upsert books, then words.
+    // Books, then words (words FK-reference books, so order matters). Any
+    // failure here MUST throw so the change stays in the store's durable buffer
+    // and the user is told — never a silent loss.
     const bookRows = state.books.map((b) => ({
       id: b.id,
       user_id: this.userId,
@@ -163,7 +181,10 @@ export class SupabaseRepository implements StorageRepository {
       unlock_after_book_id: b.unlockAfterBookId,
       built_in: b.builtIn,
     }));
-    if (bookRows.length) await this.supabase.from("vocabulary_books").upsert(bookRows);
+    if (bookRows.length) {
+      const { error } = await this.supabase.from("vocabulary_books").upsert(bookRows);
+      if (error) throw error;
+    }
 
     const wordRows = state.books.flatMap((b) =>
       b.words.map((w) => ({
@@ -179,7 +200,10 @@ export class SupabaseRepository implements StorageRepository {
         next_review_test: w.nextReviewTest,
       }))
     );
-    if (wordRows.length) await this.supabase.from("words").upsert(wordRows);
+    if (wordRows.length) {
+      const { error } = await this.supabase.from("words").upsert(wordRows);
+      if (error) throw error;
+    }
 
     // Diff-delete removed words then books (book delete cascades its words).
     const keepBookIds = new Set(state.books.map((b) => b.id));
@@ -189,22 +213,29 @@ export class SupabaseRepository implements StorageRepository {
       .from("words")
       .select("id")
       .eq("user_id", this.userId);
+    if (existingWords.error) throw existingWords.error;
     const wordsToDelete = ((existingWords.data ?? []) as { id: string }[])
       .map((r) => r.id)
       .filter((id) => !keepWordIds.has(id));
     if (wordsToDelete.length) {
-      await this.supabase.from("words").delete().in("id", wordsToDelete);
+      const { error } = await this.supabase.from("words").delete().in("id", wordsToDelete);
+      if (error) throw error;
     }
 
     const existingBooks = await this.supabase
       .from("vocabulary_books")
       .select("id")
       .eq("user_id", this.userId);
+    if (existingBooks.error) throw existingBooks.error;
     const booksToDelete = ((existingBooks.data ?? []) as { id: string }[])
       .map((r) => r.id)
       .filter((id) => !keepBookIds.has(id));
     if (booksToDelete.length) {
-      await this.supabase.from("vocabulary_books").delete().in("id", booksToDelete);
+      const { error } = await this.supabase
+        .from("vocabulary_books")
+        .delete()
+        .in("id", booksToDelete);
+      if (error) throw error;
     }
   }
 
