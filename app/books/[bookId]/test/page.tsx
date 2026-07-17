@@ -3,7 +3,15 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { Check, Eye, Home, LayoutDashboard, RotateCcw, X } from "lucide-react";
+import {
+  Check,
+  Eye,
+  Home,
+  LayoutDashboard,
+  Play,
+  RotateCcw,
+  X,
+} from "lucide-react";
 
 import type { Word } from "@/types";
 import { useActions, useAppState } from "@/store/useVocabStore";
@@ -49,6 +57,8 @@ function TestRunner() {
   const [grades, setGrades] = useState<Grade[]>([]);
   // True while replaying missed words — this run must not advance currentTest.
   const [isRetry, setIsRetry] = useState(false);
+  // Scheduling runs (today / full) show a confirmation screen before starting.
+  const [started, setStarted] = useState(false);
 
   // Build the initial test once, on the client, after the store is hydrated.
   useEffect(() => {
@@ -164,6 +174,52 @@ function TestRunner() {
             <Link href={`/books/${book.id}`}>{t("common.backToBook")}</Link>
           </Button>
         </EmptyState>
+      </main>
+    );
+  }
+
+  // --- Pre-test confirmation screen ----------------------------------------
+  // Scheduling runs (today / full) confirm the question count, breakdown, and
+  // an estimated time before the first question. Master / retry runs skip it.
+
+  if (!started && (mode === "today" || mode === "full")) {
+    const reviewN = questions.filter(
+      (w) => !w.mastered && w.nextReviewTest <= book.currentTest
+    ).length;
+    const masteredN = questions.filter((w) => w.mastered).length;
+    const learningN = total - reviewN - masteredN;
+    // ~9 seconds per question, rounded to whole minutes (at least 1).
+    const minutes = Math.max(1, Math.round((total * 9) / 60));
+
+    return (
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+        <AppHeader
+          title={t(MODE_LABEL_KEY[mode])}
+          emoji="🐝"
+          backHref={`/books/${book.id}`}
+        />
+
+        <Card className="items-center gap-4 py-10 text-center">
+          <div className="text-5xl" aria-hidden>
+            📝
+          </div>
+          <h1 className="text-2xl font-extrabold">{t(MODE_LABEL_KEY[mode])}</h1>
+          <p className="text-4xl font-extrabold tabular-nums">
+            {t("test.questionCount", { count: total })}
+          </p>
+          <div className="flex flex-col gap-1 text-sm font-semibold text-muted-foreground">
+            <span>{t("test.introLearning", { count: learningN })}</span>
+            <span>{t("test.introReview", { count: reviewN })}</span>
+            {masteredN > 0 && (
+              <span>{t("test.introMaster", { count: masteredN })}</span>
+            )}
+            <span>{t("test.estimatedTime", { count: minutes })}</span>
+          </div>
+        </Card>
+
+        <Button size="xl" className="w-full" onClick={() => setStarted(true)}>
+          <Play className="fill-current" /> {t("test.start")}
+        </Button>
       </main>
     );
   }
