@@ -50,7 +50,7 @@ export function BookDashboardPanel({
           <span className="text-sm font-semibold text-muted-foreground">
             {t("book.learningProgress")}
           </span>
-          <SproutIcon className="size-14" />
+          <SproutIcon className="size-24" />
           <p className="font-semibold">{t("book.noVocabAdded")}</p>
           <p className="whitespace-pre-line text-sm text-muted-foreground">
             {t("book.noVocabHint")}

@@ -129,10 +129,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
       <AppHeader
         title={t("settings.title")}
-        icon={<Settings className="size-7 text-primary sm:size-8" />}
+        icon={<Settings className="size-6 text-primary sm:size-7" />}
         backHref="/"
       />
 
@@ -174,7 +174,7 @@ export default function SettingsPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="size-11"
+                    className="size-12"
                     aria-label="-"
                     onClick={() => bumpQuestions(-QPT_STEP)}
                     disabled={settings.questionsPerTest <= QPT_MIN}
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="size-11"
+                    className="size-12"
                     aria-label="+"
                     onClick={() => bumpQuestions(QPT_STEP)}
                     disabled={settings.questionsPerTest >= QPT_MAX}
@@ -251,7 +251,7 @@ export default function SettingsPage() {
                   <Button
                     key={lang}
                     variant={settings.language === lang ? "default" : "outline"}
-                    className="flex-1"
+                    className="h-12 flex-1"
                     onClick={() => setLanguage(lang)}
                     aria-pressed={settings.language === lang}
                   >
@@ -377,7 +377,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>{t("settings.about")}</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <CardContent className="flex flex-col gap-2 pb-2 text-sm text-muted-foreground">
               <p className="font-semibold text-foreground">
                 {t("settings.aboutName")}
               </p>

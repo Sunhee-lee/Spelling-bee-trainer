@@ -24,7 +24,7 @@ export function EmptyState({
         className
       )}
     >
-      <div aria-hidden className="text-muted-foreground [&>svg]:size-12">
+      <div aria-hidden className="text-muted-foreground [&>svg]:size-16">
         {icon}
       </div>
       <h3 className="text-lg font-bold">{title}</h3>
