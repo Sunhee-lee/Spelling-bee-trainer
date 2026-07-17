@@ -37,7 +37,10 @@ export function AuthScreen({ title, subtitle, children, footer }: AuthScreenProp
         )}
       </div>
       <Card>
-        <CardContent className="flex flex-col gap-4">{children}</CardContent>
+        {/* Roomier input fields on the auth screens (taller than the app default). */}
+        <CardContent className="flex flex-col gap-4 [&_input]:h-14">
+          {children}
+        </CardContent>
       </Card>
       {footer && (
         <div className="text-center text-sm text-muted-foreground">{footer}</div>
