@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Plus, Search, X } from "lucide-react";
 
 import { useBookId } from "@/lib/useBookId";
 import { useAppState } from "@/store/useVocabStore";
 import { useLearnSession } from "@/lib/useLearnSession";
+import { computeLessons, isLessonBook } from "@/services/lessons";
+import { markLessonLearnCompleted, markLessonLearnStarted } from "@/lib/lessonProgress";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
@@ -28,24 +30,55 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && !!target.closest("input,textarea,select");
 }
 
-export default function LearnPage() {
+function LearnRunner() {
   const bookId = useBookId();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { state, hydrated } = useAppState();
   const { t } = useTranslation();
 
   const book = state.books.find((b) => b.id === bookId);
 
-  // Study order is by word number (§6). Memoized so its identity is stable.
-  const words = useMemo(
-    () => (book ? [...book.words].sort((a, b) => a.number - b.number) : []),
+  // Lesson scope applies to Basic 100 only. `?lesson=N` is 1-based.
+  const lessons = useMemo(
+    () => (book && isLessonBook(book) ? computeLessons(book) : []),
     [book]
   );
+  const lessonParam = Number(searchParams.get("lesson"));
+  const lessonIndex =
+    lessons.length > 0 &&
+    Number.isInteger(lessonParam) &&
+    lessonParam >= 1 &&
+    lessonParam <= lessons.length
+      ? lessonParam - 1
+      : null;
 
-  const session = useLearnSession(bookId, words, hydrated && !!book);
+  // Words for the session — a single lesson, or the whole book (by number).
+  const words = useMemo(() => {
+    if (!book) return [];
+    if (lessonIndex != null) return lessons[lessonIndex].words;
+    return [...book.words].sort((a, b) => a.number - b.number);
+  }, [book, lessonIndex, lessons]);
+
+  // Resume position is namespaced per lesson so lessons don't clobber each other.
+  const progressKey = lessonIndex != null ? `${bookId}#lesson${lessonIndex}` : bookId;
+  const session = useLearnSession(progressKey, words, hydrated && !!book);
   const { phase, flip, next, prev } = session;
 
   const exitHref = `/books/${bookId}`;
+
+  // Lesson bookkeeping (idempotent): opening marks "learning", finishing marks
+  // "learn completed". These never touch mastery, streak, or test history.
+  useEffect(() => {
+    if (lessonIndex != null && book && words.length > 0) {
+      markLessonLearnStarted(bookId, lessonIndex);
+    }
+  }, [lessonIndex, book, words.length, bookId]);
+  useEffect(() => {
+    if (lessonIndex != null && phase === "complete") {
+      markLessonLearnCompleted(bookId, lessonIndex);
+    }
+  }, [lessonIndex, phase, bookId]);
 
   // Global keyboard navigation: ←/→ move, Space/Enter flip, Escape exits.
   useEffect(() => {
@@ -56,8 +89,6 @@ export default function LearnPage() {
       }
       if (phase !== "card") return;
       switch (e.key) {
-        // Arrow keys navigate from anywhere except a text field (buttons don't
-        // use them, so a focused control never swallows them).
         case "ArrowLeft":
           if (isEditableTarget(e.target)) return;
           e.preventDefault();
@@ -68,7 +99,6 @@ export default function LearnPage() {
           e.preventDefault();
           next();
           break;
-        // Space/Enter flip — but let a focused button/link activate itself.
         case " ":
         case "Spacebar":
         case "Enter":
@@ -96,6 +126,9 @@ export default function LearnPage() {
     if (dx < 0) next();
     else prev();
   }
+
+  const subtitle =
+    lessonIndex != null ? t("lesson.title", { number: lessonIndex + 1 }) : t("learn.title");
 
   // --- Loading / guards ----------------------------------------------------
 
@@ -143,11 +176,12 @@ export default function LearnPage() {
   if (phase === "complete") {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-        <AppHeader title={book.name} backHref={exitHref} />
+        <AppHeader title={book.name} subtitle={subtitle} backHref={exitHref} />
         <LearnComplete
           book={book}
           total={session.total}
           onReviewAgain={session.reviewAgain}
+          lessonNumber={lessonIndex != null ? lessonIndex + 1 : undefined}
         />
       </main>
     );
@@ -160,7 +194,7 @@ export default function LearnPage() {
       <AppHeader
         title={book.name}
         backHref={exitHref}
-        subtitle={t("learn.title")}
+        subtitle={subtitle}
         action={
           <Link
             href={exitHref}
@@ -198,5 +232,19 @@ export default function LearnPage() {
         isLast={session.isLast}
       />
     </main>
+  );
+}
+
+export default function LearnPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto w-full max-w-xl px-4 py-8 sm:px-6">
+          <Card className="h-72 animate-pulse bg-muted/60" />
+        </main>
+      }
+    >
+      <LearnRunner />
+    </Suspense>
   );
 }

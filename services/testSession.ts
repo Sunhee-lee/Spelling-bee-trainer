@@ -76,6 +76,11 @@ export function buildMasterReviewWords(book: Book): Word[] {
   return shuffle(book.words.filter((w) => w.mastered));
 }
 
+/** A lesson test: every word in the lesson, shuffled, exactly once. */
+export function buildLessonTestWords(words: readonly Word[]): Word[] {
+  return shuffle(words);
+}
+
 /**
  * Pick the given word ids from the book, shuffled. Used to re-test only the
  * words missed in the previous run (wrong-answer retry).

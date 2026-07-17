@@ -14,9 +14,11 @@ import {
 import type { Book } from "@/types";
 import { useAppState } from "@/store/useVocabStore";
 import { computeBookStats } from "@/services/stats";
+import { isLessonBook } from "@/services/lessons";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { BookDashboardPanel } from "@/components/BookDashboardPanel";
+import { LessonListPanel } from "@/components/LessonListPanel";
 import { BookOptions } from "@/components/BookOptions";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
@@ -153,10 +155,14 @@ export default function BookDashboardPage() {
         subtitle={t("common.wordsCount", { count: book.words.length })}
       />
 
-      <BookDashboardPanel
-        book={book}
-        currentStreak={state.streak.currentStreak}
-      />
+      {isLessonBook(book) ? (
+        <LessonListPanel book={book} />
+      ) : (
+        <BookDashboardPanel
+          book={book}
+          currentStreak={state.streak.currentStreak}
+        />
+      )}
 
       {/* Book options only for user-created books (built-in names stay fixed). */}
       {!book.builtIn && (

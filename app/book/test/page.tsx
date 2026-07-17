@@ -28,10 +28,13 @@ import type { Word } from "@/types";
 import { useActions, useAppState } from "@/store/useVocabStore";
 import {
   buildFullTestWords,
+  buildLessonTestWords,
   buildMasterReviewWords,
   buildTestWords,
   pickWordsByIds,
 } from "@/services/testSession";
+import { computeLessons, isLessonBook } from "@/services/lessons";
+import { markLessonTestCompleted } from "@/lib/lessonProgress";
 import { useTranslation, type TKey } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { Celebration } from "@/components/Celebration";
@@ -41,16 +44,18 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 type Grade = "correct" | "wrong";
-type Mode = "today" | "full" | "master";
+type Mode = "today" | "full" | "master" | "lesson";
 
-const MODE_LABEL_KEY: Record<Mode, TKey> = {
+const MODE_LABEL_KEY: Record<Exclude<Mode, "lesson">, TKey> = {
   today: "test.modeToday",
   full: "test.modeFull",
   master: "test.modeMaster",
 };
 
 function parseMode(value: string | null): Mode {
-  return value === "full" || value === "master" ? value : "today";
+  return value === "full" || value === "master" || value === "lesson"
+    ? value
+    : "today";
 }
 
 function TestRunner() {
@@ -63,6 +68,20 @@ function TestRunner() {
   const { t } = useTranslation();
   const book = state.books.find((b) => b.id === bookId);
 
+  // Lesson scope (Basic 100 only). `?lesson=N` is 1-based; null when N/A.
+  const lessons = useMemo(
+    () => (book && isLessonBook(book) ? computeLessons(book) : []),
+    [book]
+  );
+  const lessonParam = Number(searchParams.get("lesson"));
+  const lessonIndex =
+    lessons.length > 0 &&
+    Number.isInteger(lessonParam) &&
+    lessonParam >= 1 &&
+    lessonParam <= lessons.length
+      ? lessonParam - 1
+      : null;
+
   const [questions, setQuestions] = useState<Word[] | null>(null);
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -74,7 +93,9 @@ function TestRunner() {
   // "Continue Learning" starts a fresh Today's Practice regardless of the URL
   // mode; when set it overrides the mode derived from the query string.
   const [forcedMode, setForcedMode] = useState<Mode | null>(null);
-  const effMode = forcedMode ?? mode;
+  // A lesson mode with an invalid/missing lesson falls back to Today's Practice.
+  const effMode: Mode =
+    forcedMode ?? (mode === "lesson" && lessonIndex == null ? "today" : mode);
 
   // Build the initial test once, on the client, after the store is hydrated.
   useEffect(() => {
@@ -84,10 +105,12 @@ function TestRunner() {
           ? buildFullTestWords(book)
           : effMode === "master"
             ? buildMasterReviewWords(book)
-            : buildTestWords(book, state.settings);
+            : effMode === "lesson" && lessonIndex != null
+              ? buildLessonTestWords(lessons[lessonIndex].words)
+              : buildTestWords(book, state.settings);
       setQuestions(initial);
     }
-  }, [hydrated, book, questions, state.settings, effMode]);
+  }, [hydrated, book, questions, state.settings, effMode, lessonIndex, lessons]);
 
   const total = questions?.length ?? 0;
   const finished = questions !== null && index >= total;
@@ -98,6 +121,12 @@ function TestRunner() {
     [grades]
   );
 
+  // A mode's display heading. Lesson runs show "Lesson N"; others use the map.
+  const headingFor = (m: Mode): string =>
+    m === "lesson" && lessonIndex != null
+      ? t("lesson.title", { number: lessonIndex + 1 })
+      : t(MODE_LABEL_KEY[(m === "lesson" ? "today" : m) as Exclude<Mode, "lesson">]);
+
   // Record finished scheduling runs (today / full) to test history, once.
   const recorded = useRef(false);
   useEffect(() => {
@@ -107,7 +136,7 @@ function TestRunner() {
       book &&
       questions &&
       !isRetry &&
-      (effMode === "today" || effMode === "full")
+      (effMode === "today" || effMode === "full" || effMode === "lesson")
     ) {
       recorded.current = true;
       actions.recordSession({
@@ -133,12 +162,33 @@ function TestRunner() {
       !streakDone.current &&
       book &&
       !isRetry &&
-      (effMode === "today" || effMode === "full" || effMode === "master")
+      (effMode === "today" ||
+        effMode === "full" ||
+        effMode === "master" ||
+        effMode === "lesson")
     ) {
       streakDone.current = true;
       actions.registerStudyDay();
     }
   }, [finished, book, isRetry, effMode, actions]);
+
+  // Mark the lesson's Spelling Test complete once (Basic 100 lesson flow). This
+  // is what flips the lesson to "Completed" and unlocks the next one. It is a
+  // real test, so grading/history/streak above still run as normal.
+  const lessonDone = useRef(false);
+  useEffect(() => {
+    if (
+      finished &&
+      !lessonDone.current &&
+      book &&
+      !isRetry &&
+      effMode === "lesson" &&
+      lessonIndex != null
+    ) {
+      lessonDone.current = true;
+      markLessonTestCompleted(book.id, lessonIndex);
+    }
+  }, [finished, book, isRetry, effMode, lessonIndex]);
 
   function grade(result: Grade) {
     if (!book || !current) return;
@@ -232,7 +282,7 @@ function TestRunner() {
   // Scheduling runs (today / full) confirm the question count, breakdown, and
   // an estimated time before the first question. Master / retry runs skip it.
 
-  if (!started && (effMode === "today" || effMode === "full")) {
+  if (!started && (effMode === "today" || effMode === "full" || effMode === "lesson")) {
     const reviewN = questions.filter(
       (w) => !w.mastered && w.nextReviewTest <= book.currentTest
     ).length;
@@ -244,14 +294,14 @@ function TestRunner() {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
         <AppHeader
-          title={t(MODE_LABEL_KEY[effMode])}
+          title={headingFor(effMode)}
           mascot
           backHref={`/books/${book.id}`}
         />
 
         <Card className="items-center gap-4 py-10 text-center">
           <NotebookPen className="size-12 text-primary" aria-hidden />
-          <h1 className="text-2xl font-extrabold">{t(MODE_LABEL_KEY[effMode])}</h1>
+          <h1 className="text-2xl font-extrabold">{headingFor(effMode)}</h1>
           <p className="text-4xl font-extrabold tabular-nums">
             {t("test.questionCount", { count: total })}
           </p>
@@ -407,15 +457,23 @@ function TestRunner() {
               <RotateCcw /> {t("test.retryWrong")}
             </Button>
           )}
+          {/* Lesson runs return to the lesson list; other runs offer another
+              Today's Practice ("Continue Learning"). */}
+          {effMode !== "lesson" && (
+            <Button
+              size={wrong > 0 ? "lg" : "xl"}
+              variant={wrong > 0 ? "outline" : "default"}
+              onClick={continueLearning}
+            >
+              <Play className={wrong > 0 ? "" : "fill-current"} />
+              {t("test.continueLearning")}
+            </Button>
+          )}
           <Button
-            size={wrong > 0 ? "lg" : "xl"}
-            variant={wrong > 0 ? "outline" : "default"}
-            onClick={continueLearning}
+            asChild
+            size={effMode === "lesson" && wrong === 0 ? "xl" : "lg"}
+            variant={effMode === "lesson" && wrong === 0 ? "default" : "ghost"}
           >
-            <Play className={wrong > 0 ? "" : "fill-current"} />
-            {t("test.continueLearning")}
-          </Button>
-          <Button asChild size="lg" variant="ghost">
             <Link href={`/books/${book.id}`}>
               <LayoutDashboard /> {t("test.backToDashboard")}
             </Link>
@@ -428,7 +486,7 @@ function TestRunner() {
   // --- Active question -----------------------------------------------------
 
   const progress = (index / total) * 100;
-  const heading = isRetry ? t("test.modeWrong") : t(MODE_LABEL_KEY[mode]);
+  const heading = isRetry ? t("test.modeWrong") : headingFor(effMode);
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">

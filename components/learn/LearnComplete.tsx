@@ -14,6 +14,8 @@ interface LearnCompleteProps {
   book: Book;
   total: number;
   onReviewAgain: () => void;
+  /** When set, "Start Spelling Test" targets this lesson's test (1-based). */
+  lessonNumber?: number;
 }
 
 /**
@@ -21,11 +23,20 @@ interface LearnCompleteProps {
  * celebrates finishing the review — it changes no mastery, streak, or history.
  * "Start Spelling Test" is the natural next step, but it's disabled with a lock
  * hint when the book's practice is still locked (Learn stays available, tests
- * don't).
+ * don't). In lesson mode it launches that lesson's test instead.
  */
-export function LearnComplete({ book, total, onReviewAgain }: LearnCompleteProps) {
+export function LearnComplete({
+  book,
+  total,
+  onReviewAgain,
+  lessonNumber,
+}: LearnCompleteProps) {
   const { t } = useTranslation();
   const locked = book.locked;
+  const testHref =
+    lessonNumber != null
+      ? `/books/${book.id}/test?mode=lesson&lesson=${lessonNumber}`
+      : `/books/${book.id}/test?mode=today`;
 
   return (
     <div className="relative flex flex-col gap-6">
@@ -49,7 +60,7 @@ export function LearnComplete({ book, total, onReviewAgain }: LearnCompleteProps
           </div>
         ) : (
           <Button asChild size="xl" className="w-full">
-            <Link href={`/books/${book.id}/test?mode=today`}>
+            <Link href={testHref}>
               <Play className="fill-current" /> {t("learn.startSpellingTest")}
             </Link>
           </Button>
