@@ -113,10 +113,7 @@ export default function BookDashboardPage() {
         subtitle={t("common.wordsCount", { count: book.words.length })}
       />
 
-      <BookDashboardPanel
-        book={book}
-        questionsPerTest={state.settings.questionsPerTest}
-      />
+      <BookDashboardPanel book={book} />
 
       {/* Book options only for user-created books (built-in names stay fixed). */}
       {!book.builtIn && (
