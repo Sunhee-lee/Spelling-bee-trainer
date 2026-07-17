@@ -9,18 +9,27 @@ import { Badge } from "@/components/ui/badge";
 
 interface BookSettingsRowProps {
   book: Book;
+  /** Name of the prerequisite book (for the locked description). */
+  prerequisiteName?: string;
 }
 
 /**
  * A single, tappable book row inside Settings → Vocabulary books. Opening the
  * book (its dashboard / Manage Words) is where the per-book actions live, so
- * the Settings list stays clean.
+ * the Settings list stays clean. A locked book (e.g. the Supplemental List)
+ * still opens straight into Manage Words — words can be added while practice
+ * is locked — and shows a "Practice Locked" badge instead of "no access".
  */
-export function BookSettingsRow({ book }: BookSettingsRowProps) {
+export function BookSettingsRow({ book, prerequisiteName }: BookSettingsRowProps) {
   const { t } = useTranslation();
+  const prereq = prerequisiteName ?? "Basic 100";
+  // Locked books open directly into word management (practice is locked, not
+  // the whole book); unlocked books open their learning dashboard.
+  const href = book.locked ? `/books/${book.id}/words` : `/books/${book.id}`;
+
   return (
     <Link
-      href={`/books/${book.id}`}
+      href={href}
       className="flex items-center gap-3 rounded-2xl border-2 border-border px-4 py-3 transition-colors hover:bg-accent"
     >
       <div className="min-w-0 flex-1">
@@ -33,10 +42,15 @@ export function BookSettingsRow({ book }: BookSettingsRowProps) {
         <p className="text-sm text-muted-foreground">
           {t("common.wordsCount", { count: book.words.length })}
         </p>
+        {book.locked && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t("book.practiceLockedDesc", { prereq })}
+          </p>
+        )}
       </div>
       {book.locked && (
-        <Badge variant="muted" className="gap-1">
-          <Lock className="size-3.5" /> {t("common.locked")}
+        <Badge variant="muted" className="shrink-0 gap-1">
+          <Lock className="size-3.5" /> {t("book.practiceLocked")}
         </Badge>
       )}
       <ChevronRight className="size-5 shrink-0 text-muted-foreground" />

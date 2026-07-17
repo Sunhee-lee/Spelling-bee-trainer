@@ -49,10 +49,10 @@ export function AccountSection() {
               {t("account.offlineDesc")}
             </p>
             <div className="mt-1 flex flex-col gap-2 sm:flex-row">
-              <Button asChild className="h-13 flex-1">
+              <Button asChild className="h-14 text-base sm:flex-1">
                 <Link href="/login">{t("account.login")}</Link>
               </Button>
-              <Button asChild variant="outline" className="h-13 flex-1">
+              <Button asChild variant="outline" className="h-14 text-base sm:flex-1">
                 <Link href="/signup">{t("account.createAccount")}</Link>
               </Button>
             </div>

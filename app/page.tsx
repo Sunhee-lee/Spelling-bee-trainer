@@ -9,6 +9,7 @@ import { computeBookStats, isBookComplete } from "@/services/stats";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { BookDashboardPanel } from "@/components/BookDashboardPanel";
+import { InstallButton } from "@/components/InstallButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -86,11 +87,14 @@ export default function HomePage() {
         title={t("common.appName")}
         mascot
         action={
-          <Button asChild variant="outline" size="icon" aria-label={t("common.settings")}>
-            <Link href="/settings">
-              <Settings />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <InstallButton />
+            <Button asChild variant="outline" size="icon" aria-label={t("common.settings")}>
+              <Link href="/settings">
+                <Settings />
+              </Link>
+            </Button>
+          </div>
         }
       />
 

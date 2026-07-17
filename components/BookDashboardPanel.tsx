@@ -15,7 +15,7 @@ import {
 import type { Book } from "@/types";
 import { computeBookStats } from "@/services/stats";
 import { useTranslation } from "@/lib/i18n";
-import { SproutIcon } from "@/components/SproutIcon";
+import { HiveBeeIcon } from "@/components/HiveBeeIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -46,11 +46,8 @@ export function BookDashboardPanel({
   if (isEmpty) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
-          <span className="text-sm font-semibold text-muted-foreground">
-            {t("book.learningProgress")}
-          </span>
-          <SproutIcon className="size-24" />
+        <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
+          <HiveBeeIcon className="size-28" />
           <p className="font-semibold">{t("book.noVocabAdded")}</p>
           <p className="whitespace-pre-line text-sm text-muted-foreground">
             {t("book.noVocabHint")}

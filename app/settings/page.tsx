@@ -150,7 +150,16 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
               {state.books.map((book) => (
-                <BookSettingsRow key={book.id} book={book} />
+                <BookSettingsRow
+                  key={book.id}
+                  book={book}
+                  prerequisiteName={
+                    book.unlockAfterBookId
+                      ? state.books.find((b) => b.id === book.unlockAfterBookId)
+                          ?.name
+                      : undefined
+                  }
+                />
               ))}
               <NewBookDialog />
             </CardContent>

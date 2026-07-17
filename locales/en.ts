@@ -19,6 +19,7 @@ export const en: typeof ko = {
     loading: "Loading…",
     settings: "Settings",
     home: "Home",
+    installApp: "Install app",
     wordsCount: "{count} words",
     savedOnDevice: "Everything is saved on this device.",
     bookNotFound: "Book not found",
@@ -63,6 +64,9 @@ export const en: typeof ko = {
     lockedCurrent: "Current progress: {mastered} / {total} words",
     lockedRemaining: "Remaining: {count} words",
     lockedAuto: "This book unlocks automatically when {prereq} is fully mastered.",
+    practiceLocked: "Practice Locked",
+    practiceLockedDesc: "Practice unlocks after mastering {prereq}.",
+    manageWordsCta: "Manage Words",
   },
   progress: {
     mastered: "Mastered",
@@ -89,6 +93,8 @@ export const en: typeof ko = {
     deleteAria: "Delete {word}",
     deleteTitle: "Delete “{word}”?",
     deleteDesc: "This removes the word from this book. You can’t undo this.",
+    lockedBannerTitle: "You can add words in advance.",
+    lockedBannerDesc: "Practice with this book unlocks after mastering {prereq}.",
   },
   test: {
     modeToday: "Today’s Practice",
