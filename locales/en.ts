@@ -4,7 +4,7 @@ import type { ko } from "@/locales/ko";
 // missing or extra key.
 export const en: typeof ko = {
   common: {
-    appName: "Spelling Bee Trainer",
+    appName: "Spelling Bee",
     back: "Back",
     cancel: "Cancel",
     save: "Save",
@@ -179,7 +179,7 @@ export const en: typeof ko = {
     dangerZoneDesc: "These actions can’t be undone.",
     questionsUnit: "{count} questions",
     about: "About",
-    aboutName: "Spelling Bee Trainer 🐝",
+    aboutName: "Spelling Bee 🐝",
     aboutBody: "A friendly spelling practice app for young learners.",
     version: "Version",
     privacyPolicy: "Privacy Policy",

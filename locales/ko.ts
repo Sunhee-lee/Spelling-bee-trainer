@@ -3,7 +3,7 @@
 
 export const ko = {
   common: {
-    appName: "스펠링 비 트레이너",
+    appName: "Spelling Bee",
     back: "뒤로",
     cancel: "취소",
     save: "저장",
@@ -174,7 +174,7 @@ export const ko = {
     dangerZoneDesc: "이 작업은 되돌릴 수 없어요.",
     questionsUnit: "{count}문제",
     about: "정보",
-    aboutName: "스펠링 비 트레이너 🐝",
+    aboutName: "Spelling Bee 🐝",
     aboutBody: "어린 학습자를 위한 친근한 스펠링 연습 앱이에요.",
     version: "버전",
     privacyPolicy: "개인정보 처리방침",
