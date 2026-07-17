@@ -23,10 +23,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-11 px-6 text-base has-[>svg]:px-5",
+        default: "h-11 px-5 text-base has-[>svg]:px-4",
         sm: "h-9 px-4 text-sm has-[>svg]:px-3",
-        lg: "h-14 px-8 text-lg has-[>svg]:px-6",
-        xl: "h-16 px-10 text-xl has-[>svg]:px-8 [&_svg:not([class*='size-'])]:size-7",
+        lg: "h-14 px-7 text-lg has-[>svg]:px-5",
+        xl: "h-16 px-9 text-xl has-[>svg]:px-7 [&_svg:not([class*='size-'])]:size-7",
         icon: "size-11",
       },
     },

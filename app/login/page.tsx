@@ -84,7 +84,7 @@ export default function LoginPage() {
           />
         </div>
         {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
-        <Button type="submit" size="lg" disabled={busy || !configured}>
+        <Button type="submit" size="lg" className="mt-2 h-16" disabled={busy || !configured}>
           {busy ? t("auth.loggingIn") : t("auth.login")}
         </Button>
       </form>
