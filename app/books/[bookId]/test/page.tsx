@@ -234,7 +234,7 @@ function TestRunner() {
       <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
         <AppHeader
           title={t(MODE_LABEL_KEY[effMode])}
-          emoji="🐝"
+          mascot
           backHref={`/books/${book.id}`}
         />
 
@@ -423,7 +423,7 @@ function TestRunner() {
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <AppHeader title={heading} emoji="🐝" backHref={`/books/${book.id}`} />
+      <AppHeader title={heading} mascot backHref={`/books/${book.id}`} />
 
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between text-sm font-semibold text-muted-foreground">

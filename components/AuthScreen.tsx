@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { useTranslation } from "@/lib/i18n";
+import { Mascot } from "@/components/Mascot";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface AuthScreenProps {
@@ -25,9 +26,7 @@ export function AuthScreen({ title, subtitle, children, footer }: AuthScreenProp
           className="inline-flex flex-col items-center gap-1"
           aria-label={appName}
         >
-          <span className="text-4xl" aria-hidden>
-            🐝
-          </span>
+          <Mascot className="size-12" />
           <span className="text-sm font-extrabold tracking-wide text-muted-foreground">
             {appName}
           </span>
