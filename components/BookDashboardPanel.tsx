@@ -13,6 +13,7 @@ import {
 import type { Book } from "@/types";
 import { computeBookStats } from "@/services/stats";
 import { useTranslation } from "@/lib/i18n";
+import { SproutIcon } from "@/components/SproutIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -47,9 +48,7 @@ export function BookDashboardPanel({
           <span className="text-sm font-semibold text-muted-foreground">
             {t("book.learningProgress")}
           </span>
-          <div className="text-[3.5rem] leading-none" aria-hidden>
-            🌱
-          </div>
+          <SproutIcon className="size-14" />
           <p className="font-semibold">{t("book.noVocabAdded")}</p>
           <p className="whitespace-pre-line text-sm text-muted-foreground">
             {t("book.noVocabHint")}
