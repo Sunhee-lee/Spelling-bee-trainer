@@ -27,7 +27,7 @@ export function AccountSection() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<
-    "ok" | "empty" | "error" | null
+    "ok" | "empty" | "error" | "notPersisted" | null
   >(null);
 
   async function handleUpload() {
@@ -45,9 +45,11 @@ export function AccountSection() {
       ? { text: t("account.uploadDone"), tone: "text-success" }
       : uploadResult === "empty"
         ? { text: t("account.uploadEmpty"), tone: "text-muted-foreground" }
-        : uploadResult === "error"
-          ? { text: t("account.uploadError"), tone: "text-destructive" }
-          : null;
+        : uploadResult === "notPersisted"
+          ? { text: t("account.uploadNotPersisted"), tone: "text-destructive" }
+          : uploadResult === "error"
+            ? { text: t("account.uploadError"), tone: "text-destructive" }
+            : null;
 
   return (
     <Card>

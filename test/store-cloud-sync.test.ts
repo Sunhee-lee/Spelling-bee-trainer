@@ -18,6 +18,8 @@ type CloudRef = { value: AppState | null };
 class MockCloudRepo extends SupabaseRepository {
   private buffered: AppState | null = null;
   failMode = false;
+  /** Report writes as succeeding but silently drop them (e.g. RLS SELECT gap). */
+  swallowWrites = false;
 
   constructor(private readonly cloudRef: CloudRef, userId = "user-1") {
     super({} as unknown as SupabaseClient, userId);
@@ -41,9 +43,9 @@ class MockCloudRepo extends SupabaseRepository {
       this.onSyncSettled?.(new Error("forced cloud failure"));
       return false;
     }
-    this.cloudRef.value = structuredClone(state);
+    if (!this.swallowWrites) this.cloudRef.value = structuredClone(state);
     this.onSyncSettled?.(null);
-    return true;
+    return true; // reports success even if the write was swallowed
   }
 }
 
@@ -410,6 +412,13 @@ describe("uploadDeviceDataToCloud (manual upload of this device's data)", () => 
     const result = await store.uploadDeviceDataToCloud();
     expect(result).toBe("ok");
     expect(wordsOf(cloud.value!)).toContain("cloudword");
+  });
+
+  it("returns 'notPersisted' when the write 'succeeds' but the cloud stays empty", async () => {
+    const { store, repo, basicId } = await signedInWithSeed();
+    store.addWord(basicId, "ghostword", "유령");
+    repo.swallowWrites = true; // e.g. an RLS SELECT gap: write ok, read-back empty
+    expect(await store.uploadDeviceDataToCloud()).toBe("notPersisted");
   });
 
   it("returns 'empty' when this device has no words to upload", async () => {

@@ -349,6 +349,8 @@ export const ko = {
     uploadDone: "클라우드에 올렸어요.",
     uploadEmpty: "이 기기에 올릴 데이터가 없어요.",
     uploadError: "업로드에 실패했어요. 잠시 후 다시 시도해 주세요.",
+    uploadNotPersisted:
+      "올렸지만 클라우드에서 데이터가 확인되지 않아요. Supabase 정책·권한(0002·0007 마이그레이션)을 확인해 주세요.",
     offlineTitle: "이 기기에서 오프라인으로 사용 중이에요.",
     offlineDesc: "로그인하면 진행도를 백업하고 기기 간에 동기화할 수 있어요.",
     login: "로그인",
