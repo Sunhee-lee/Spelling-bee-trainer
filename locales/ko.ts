@@ -413,6 +413,7 @@ export const ko = {
     notConfigured:
       "관리자 통계는 서버의 서비스 역할 키가 필요해요. SUPABASE_SERVICE_ROLE_KEY를 설정하세요 (docs/SUPABASE_SETUP.md 참고).",
     loadError: "통계를 불러오지 못했어요.",
+    dbErrorTitle: "데이터베이스 조회 오류 (아래 원인을 확인하세요)",
     userAccounts: "사용자 계정",
     email: "이메일",
     signupDate: "가입일",

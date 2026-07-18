@@ -45,6 +45,7 @@ interface Stats {
   activeUsersToday?: number;
   testsCompletedToday?: number;
   users?: AdminUser[];
+  dbErrors?: string[];
 }
 
 function StatCard({
@@ -184,6 +185,23 @@ export default function AdminPage() {
         </Card>
       ) : stats ? (
         <>
+          {/* Surface DB read errors so an all-zero screen isn't mistaken for
+              "no data" when it's really a missing table / wrong project. */}
+          {stats.dbErrors && stats.dbErrors.length > 0 && (
+            <Card className="border-2 border-destructive/40">
+              <CardContent className="flex flex-col gap-1 py-4">
+                <p className="text-sm font-bold text-destructive">
+                  {t("admin.dbErrorTitle")}
+                </p>
+                {stats.dbErrors.map((e) => (
+                  <p key={e} className="break-words font-mono text-xs text-destructive">
+                    {e}
+                  </p>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatCard
