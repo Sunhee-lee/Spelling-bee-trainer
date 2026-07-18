@@ -125,24 +125,30 @@ export class SupabaseRepository implements StorageRepository {
     }, FLUSH_DELAY_MS);
   }
 
-  /** Flush any pending write immediately (used before recording history). */
-  async flushNow(): Promise<void> {
+  /**
+   * Flush any pending write immediately (used before recording history, and by
+   * the manual "upload this device's data" action). Resolves to `true` when the
+   * cloud write succeeded (or there was nothing pending), `false` on error.
+   */
+  async flushNow(): Promise<boolean> {
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
     }
     const state = this.pending;
-    if (!state) return;
+    if (!state) return true;
     this.pending = null;
 
     try {
       await this.sync(state);
       this.onSyncSettled?.(null);
+      return true;
     } catch (err) {
       // Surface for debugging AND tell the store so it keeps the unsynced data
       // in its durable buffer and can notify the user.
       console.error("Supabase sync failed", err);
       this.onSyncSettled?.(err);
+      return false;
     }
   }
 
