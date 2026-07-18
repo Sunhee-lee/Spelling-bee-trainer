@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AppState } from "@/types";
 import { VocabStore, type SyncStatus } from "@/store/store";
 import { SupabaseRepository } from "@/storage/supabaseRepository";
+import { LocalStorageRepository } from "@/storage/localStorageRepository";
 
 /**
  * Regression tests for the signed-in data-loss bug: adding/editing words while
@@ -32,16 +33,17 @@ class MockCloudRepo extends SupabaseRepository {
   }
 
   // The debounce firing (or a forced failure).
-  async flushNow(): Promise<void> {
-    if (!this.buffered) return;
+  async flushNow(): Promise<boolean> {
+    if (!this.buffered) return true;
     const state = this.buffered;
     this.buffered = null;
     if (this.failMode) {
       this.onSyncSettled?.(new Error("forced cloud failure"));
-      return;
+      return false;
     }
     this.cloudRef.value = structuredClone(state);
     this.onSyncSettled?.(null);
+    return true;
   }
 }
 
@@ -367,5 +369,71 @@ describe("SupabaseRepository surfaces write errors (no silent success)", () => {
     await repo.save(stateWithWord());
     await repo.flushNow();
     expect(settled).toEqual([null]);
+  });
+});
+
+describe("uploadDeviceDataToCloud (manual upload of this device's data)", () => {
+  const STATE_KEY = "spelling-bee-trainer/state";
+
+  it("pushes this device's local data to the cloud", async () => {
+    const cloud: CloudRef = { value: null };
+    const { store, repo } = await boot(cloud);
+    await repo.flushNow(); // baseline seed synced (0 words)
+
+    // Rich data sitting only in this device's LocalStorage (offline work).
+    const local = structuredClone(store.getSnapshot());
+    local.books[0].words.push({
+      id: "wx",
+      number: 1,
+      word: "hello",
+      meaning: "안녕",
+      mastered: false,
+      consecutiveCorrect: 0,
+      level: 0,
+      nextReviewTest: 0,
+    });
+    window.localStorage.setItem(STATE_KEY, JSON.stringify(local));
+
+    const result = await store.uploadDeviceDataToCloud();
+    expect(result).toBe("ok");
+    expect(wordsOf(cloud.value!)).toContain("hello"); // reached the cloud
+    expect(wordsOf(store.getSnapshot())).toContain("hello"); // and the live state
+  });
+
+  it("returns 'empty' when this device has no words to upload", async () => {
+    const cloud: CloudRef = { value: null };
+    const { store } = await boot(cloud);
+    // Local key holds only the seeded (word-less) books.
+    window.localStorage.setItem(STATE_KEY, JSON.stringify(store.getSnapshot()));
+    expect(await store.uploadDeviceDataToCloud()).toBe("empty");
+  });
+
+  it("returns 'error' when the cloud write fails (data stays buffered)", async () => {
+    const cloud: CloudRef = { value: null };
+    const { store, repo } = await boot(cloud);
+    await repo.flushNow();
+
+    const local = structuredClone(store.getSnapshot());
+    local.books[0].words.push({
+      id: "wy",
+      number: 1,
+      word: "world",
+      meaning: "세계",
+      mastered: false,
+      consecutiveCorrect: 0,
+      level: 0,
+      nextReviewTest: 0,
+    });
+    window.localStorage.setItem(STATE_KEY, JSON.stringify(local));
+
+    repo.failMode = true;
+    expect(await store.uploadDeviceDataToCloud()).toBe("error");
+    expect(cloud.value && wordsOf(cloud.value).includes("world")).toBeFalsy();
+  });
+
+  it("is a no-op ('offline') when signed out (LocalStorage repo)", async () => {
+    const store = new VocabStore(new LocalStorageRepository());
+    await store.hydrate();
+    expect(await store.uploadDeviceDataToCloud()).toBe("offline");
   });
 });

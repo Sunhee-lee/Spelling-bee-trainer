@@ -167,8 +167,29 @@ export class VocabStore {
 
   /** Best-effort: push any debounced cloud write immediately (e.g. on unload). */
   flushPendingSync(): void {
-    const r = this.repo as { flushNow?: () => Promise<void> };
+    const r = this.repo as { flushNow?: () => Promise<unknown> };
     void r.flushNow?.();
+  }
+
+  /**
+   * Manually upload this device's offline data to the cloud (signed-in only).
+   *
+   * When a signed-in user has learning data that only lives in this device's
+   * LocalStorage — created offline, or kept after choosing "Start fresh" at
+   * first login — it never reaches the cloud on its own. This pushes that local
+   * copy up (replacing the cloud with it) so it syncs across devices and shows
+   * in the admin totals. Returns the outcome so the UI can report it.
+   */
+  async uploadDeviceDataToCloud(): Promise<"ok" | "empty" | "error" | "offline"> {
+    if (!(this.repo instanceof SupabaseRepository)) return "offline";
+    const localState = await new LocalStorageRepository().load();
+    const wordCount = localState
+      ? localState.books.reduce((n, b) => n + b.words.length, 0)
+      : 0;
+    if (!localState || wordCount === 0) return "empty";
+    this.commit(localState);
+    const ok = await this.repo.flushNow();
+    return ok ? "ok" : "error";
   }
 
   // --- useSyncExternalStore wiring -----------------------------------------

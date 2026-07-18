@@ -1,17 +1,53 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Cloud, CloudOff, LogOut } from "lucide-react";
+import { Cloud, CloudOff, CloudUpload, LogOut } from "lucide-react";
 
 import { useAuth } from "@/auth/AuthProvider";
+import { store } from "@/store/store";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 /** Account / cloud-sync status and controls for the Settings page. */
 export function AccountSection() {
   const { configured, loading, user, signOut } = useAuth();
   const { t } = useTranslation();
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<
+    "ok" | "empty" | "error" | null
+  >(null);
+
+  async function handleUpload() {
+    setUploading(true);
+    setUploadResult(null);
+    const result = await store.uploadDeviceDataToCloud();
+    setUploading(false);
+    setUploadOpen(false);
+    // "offline" shouldn't happen here (button is signed-in only) — treat as error.
+    setUploadResult(result === "offline" ? "error" : result);
+  }
+
+  const resultMessage =
+    uploadResult === "ok"
+      ? { text: t("account.uploadDone"), tone: "text-success" }
+      : uploadResult === "empty"
+        ? { text: t("account.uploadEmpty"), tone: "text-muted-foreground" }
+        : uploadResult === "error"
+          ? { text: t("account.uploadError"), tone: "text-destructive" }
+          : null;
 
   return (
     <Card>
@@ -36,6 +72,27 @@ export function AccountSection() {
             <p className="text-sm text-muted-foreground">
               {t("account.syncedDesc")}
             </p>
+
+            {/* Push this device's local data to the cloud on demand. */}
+            <Button
+              variant="outline"
+              disabled={uploading}
+              onClick={() => {
+                setUploadResult(null);
+                setUploadOpen(true);
+              }}
+            >
+              <CloudUpload /> {uploading ? t("account.uploading") : t("account.uploadDevice")}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              {t("account.uploadDeviceDesc")}
+            </p>
+            {resultMessage && (
+              <p className={`text-xs font-semibold ${resultMessage.tone}`}>
+                {resultMessage.text}
+              </p>
+            )}
+
             <Button variant="outline" onClick={() => void signOut()}>
               <LogOut /> {t("account.logout")}
             </Button>
@@ -59,6 +116,31 @@ export function AccountSection() {
           </>
         )}
       </CardContent>
+
+      <AlertDialog open={uploadOpen} onOpenChange={setUploadOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("account.uploadDialogTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("account.uploadDialogBody")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={uploading}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={uploading}
+              onClick={(e) => {
+                e.preventDefault(); // keep the dialog open until the upload settles
+                void handleUpload();
+              }}
+            >
+              {uploading ? t("account.uploading") : t("account.uploadAction")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
