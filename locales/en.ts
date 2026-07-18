@@ -256,7 +256,7 @@ export const en: typeof ko = {
     testSettings: "Practice Settings",
     questionsPerTest: "Questions per Test",
     questionsPerTestDesc: "Choose how many questions to practice at a time.",
-    shuffle: "Shuffle Questions",
+    shuffle: "Shuffle Practice Words",
     shuffleDesc: "Show questions in a different order each time.",
     masterReviewRate: "Master Word Review",
     masterReviewRateDesc: "Choose how many mastered words to include in each test.",

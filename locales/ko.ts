@@ -252,7 +252,7 @@ export const ko = {
     testSettings: "연습 설정",
     questionsPerTest: "테스트 문제 수",
     questionsPerTestDesc: "한 번에 연습할 문제 수를 선택하세요.",
-    shuffle: "문제 순서 섞기",
+    shuffle: "연습 단어 섞기",
     shuffleDesc: "매번 다른 순서로 출제합니다.",
     masterReviewRate: "마스터 단어 비율",
     masterReviewRateDesc: "테스트에 포함할 마스터 단어의 비율을 설정합니다.",
