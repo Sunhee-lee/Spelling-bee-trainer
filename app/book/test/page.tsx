@@ -102,11 +102,11 @@ function TestRunner() {
     if (hydrated && book && questions === null) {
       const initial =
         effMode === "full"
-          ? buildFullTestWords(book)
+          ? buildFullTestWords(book, state.settings)
           : effMode === "master"
             ? buildMasterReviewWords(book)
             : effMode === "lesson" && lessonIndex != null
-              ? buildLessonTestWords(lessons[lessonIndex].words)
+              ? buildLessonTestWords(lessons[lessonIndex].words, state.settings)
               : buildTestWords(book, state.settings);
       setQuestions(initial);
     }
