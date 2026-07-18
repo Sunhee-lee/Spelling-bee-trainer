@@ -182,12 +182,17 @@ export class VocabStore {
    */
   async uploadDeviceDataToCloud(): Promise<"ok" | "empty" | "error" | "offline"> {
     if (!(this.repo instanceof SupabaseRepository)) return "offline";
+    const wordCount = (s: AppState | null): number =>
+      s ? s.books.reduce((n, b) => n + b.words.length, 0) : 0;
+    // Upload whatever the learner actually sees. The live state already
+    // reflects the durable pending buffer (data created while signed in), while
+    // the offline LocalStorage copy holds data created signed-out — pick
+    // whichever has more words so neither source is missed.
     const localState = await new LocalStorageRepository().load();
-    const wordCount = localState
-      ? localState.books.reduce((n, b) => n + b.words.length, 0)
-      : 0;
-    if (!localState || wordCount === 0) return "empty";
-    this.commit(localState);
+    const source =
+      wordCount(this.state) >= wordCount(localState) ? this.state : localState;
+    if (!source || wordCount(source) === 0) return "empty";
+    this.commit(source);
     const ok = await this.repo.flushNow();
     return ok ? "ok" : "error";
   }
