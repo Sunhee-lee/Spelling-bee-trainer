@@ -400,6 +400,18 @@ describe("uploadDeviceDataToCloud (manual upload of this device's data)", () => 
     expect(wordsOf(store.getSnapshot())).toContain("hello"); // and the live state
   });
 
+  it("uploads data created while signed in (live state), even if the local key is empty", async () => {
+    // Data created signed-in lives in the live state / pending buffer, NOT the
+    // offline LocalStorage 'state' key. The upload must still find it.
+    const { cloud, store, basicId } = await signedInWithSeed();
+    store.addWord(basicId, "cloudword", "구름"); // in live state + pending buffer
+    window.localStorage.removeItem(STATE_KEY); // the offline copy is empty
+
+    const result = await store.uploadDeviceDataToCloud();
+    expect(result).toBe("ok");
+    expect(wordsOf(cloud.value!)).toContain("cloudword");
+  });
+
   it("returns 'empty' when this device has no words to upload", async () => {
     const cloud: CloudRef = { value: null };
     const { store } = await boot(cloud);
