@@ -43,6 +43,14 @@ export interface LessonView extends Lesson {
   status: LessonStatus;
   /** True until the previous lesson is completed (first lesson is never locked). */
   locked: boolean;
+  /**
+   * How many of the lesson's words are SRS-mastered. This is INDEPENDENT of
+   * lesson completion: a lesson can be Completed with few mastered words, and a
+   * word can be mastered without the lesson being Completed.
+   */
+  masteredCount: number;
+  /** True when every word in the lesson is mastered ("Lesson Mastered"). */
+  allMastered: boolean;
 }
 
 /**
@@ -96,7 +104,9 @@ export function computeLessonViews(
     const status = lessonStatus(progressByIndex[lesson.index]);
     const locked =
       lesson.index > 0 && views[lesson.index - 1]?.status !== "completed";
-    views.push({ ...lesson, status, locked });
+    const masteredCount = lesson.words.filter((w) => w.mastered).length;
+    const allMastered = lesson.words.length > 0 && masteredCount === lesson.words.length;
+    views.push({ ...lesson, status, locked, masteredCount, allMastered });
   }
   return views;
 }

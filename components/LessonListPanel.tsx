@@ -23,6 +23,7 @@ import {
   type LessonStatus,
   type LessonView,
 } from "@/services/lessons";
+import { computeBookStats } from "@/services/stats";
 import { readBookLessons, resetBookLessons } from "@/lib/lessonProgress";
 import { deleteCloudBookLessons } from "@/lib/lessonSync";
 import { useTranslation, type TKey } from "@/lib/i18n";
@@ -30,6 +31,7 @@ import { Celebration } from "@/components/Celebration";
 import { HiveBeeIcon } from "@/components/HiveBeeIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,7 +75,8 @@ function StatusBadge({ status, locked }: { status: LessonStatus; locked: boolean
 
 function LessonCard({ book, view }: { book: Book; view: LessonView }) {
   const { t } = useTranslation();
-  const { number, words, startNumber, endNumber, status, locked } = view;
+  const { number, words, startNumber, endNumber, status, locked, masteredCount, allMastered } =
+    view;
   const lessonParam = number; // 1-based in the URL
   const testEnabled = status === "readyForTest" || status === "completed";
 
@@ -91,8 +94,29 @@ function LessonCard({ book, view }: { book: Book; view: LessonView }) {
               {t("lesson.wordCount", { count: words.length })}
             </span>
           </div>
-          <StatusBadge status={status} locked={locked} />
+          <div className="flex flex-col items-end gap-1">
+            <StatusBadge status={status} locked={locked} />
+            {allMastered && !locked && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-bee/25 px-2.5 py-1 text-xs font-bold text-amber-700">
+                <Trophy className="size-3.5" /> {t("lesson.lessonMastered")}
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* Mastery progress — independent of lesson completion (§23). */}
+        {!locked && words.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Progress
+              value={(masteredCount / words.length) * 100}
+              indicatorClassName="bg-bee"
+              className="h-2"
+            />
+            <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
+              {t("lesson.mastered", { mastered: masteredCount, total: words.length })}
+            </span>
+          </div>
+        )}
 
         {locked ? (
           <p className="text-sm text-muted-foreground">{t("lesson.lockedHint")}</p>
@@ -173,6 +197,11 @@ export function LessonListPanel({ book }: { book: Book }) {
   }
 
   const allDone = allLessonsCompleted(views);
+  const completedCount = views.filter((v) => v.status === "completed").length;
+
+  // Master progress is tracked independently of lesson completion (§23).
+  const stats = computeBookStats(book);
+  const allWordsMastered = stats.total > 0 && stats.mastered === stats.total;
 
   // Restart clears lesson progress ONLY — words, mastery, streak, statistics,
   // and test history are untouched. Afterwards only Lesson 1 is unlocked.
@@ -185,14 +214,29 @@ export function LessonListPanel({ book }: { book: Book }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {allDone && (
+      {/* Final goal: every word mastered. Separate from lesson completion. */}
+      {allWordsMastered && (
+        <div className="relative">
+          <Celebration intensity="strong" />
+          <Card className="sbt-pop-in items-center gap-3 border-bee/50 bg-bee/10 py-8 text-center">
+            <Trophy className="size-16 text-bee" aria-hidden />
+            <h2 className="text-xl font-extrabold">{t("lesson.allMasteredTitle")}</h2>
+            <p className="text-sm font-semibold text-muted-foreground">
+              {t("lesson.allMasteredDesc", { count: stats.total })}
+            </p>
+          </Card>
+        </div>
+      )}
+
+      {/* Learning milestone: all lessons finished (shown before full mastery). */}
+      {allDone && !allWordsMastered && (
         <div className="relative">
           <Celebration intensity="calm" />
           <Card className="sbt-pop-in items-center gap-3 py-8 text-center">
             <HiveBeeIcon className="size-24" />
             <h2 className="text-xl font-extrabold">{t("lesson.allCompleteTitle")}</h2>
-            <p className="text-sm font-semibold text-muted-foreground">
-              {t("lesson.allCompleteDesc", { count: views.length })}
+            <p className="whitespace-pre-line text-sm font-semibold text-muted-foreground">
+              {t("lesson.allCompleteDesc")}
             </p>
             <div className="mt-2 flex w-full flex-col gap-2">
               <Button asChild size="lg">
@@ -205,23 +249,37 @@ export function LessonListPanel({ book }: { book: Book }) {
                   <GraduationCap /> {t("lesson.reviewAll")}
                 </Link>
               </Button>
-              <div className="mt-1 flex flex-col items-center gap-1.5">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-muted-foreground"
-                  onClick={() => setRestartOpen(true)}
-                >
-                  <RotateCcw /> {t("lesson.restart")}
-                </Button>
-                <p className="whitespace-pre-line text-center text-xs text-muted-foreground">
-                  {t("lesson.restartDesc")}
-                </p>
-              </div>
             </div>
           </Card>
         </div>
       )}
+
+      {/* Two independent progress meters (§23). */}
+      <Card>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-sm font-semibold">
+              <span className="text-muted-foreground">{t("lesson.lessonProgressLabel")}</span>
+              <span className="tabular-nums">
+                {t("lesson.progressLessons", { completed: completedCount, total: views.length })}
+              </span>
+            </div>
+            <Progress
+              value={(completedCount / views.length) * 100}
+              indicatorClassName="bg-grass"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-sm font-semibold">
+              <span className="text-muted-foreground">{t("lesson.masterProgressLabel")}</span>
+              <span className="tabular-nums">
+                {t("lesson.progressMastered", { mastered: stats.mastered, total: stats.total })}
+              </span>
+            </div>
+            <Progress value={stats.progress} indicatorClassName="bg-bee" />
+          </div>
+        </CardContent>
+      </Card>
 
       <AlertDialog open={restartOpen} onOpenChange={setRestartOpen}>
         <AlertDialogContent>
@@ -268,6 +326,23 @@ export function LessonListPanel({ book }: { book: Book }) {
             <BookOpen /> {t("book.manageWords")}
           </Link>
         </Button>
+
+        {/* Restart is offered once every lesson is completed. */}
+        {allDone && (
+          <div className="mt-2 flex flex-col items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              onClick={() => setRestartOpen(true)}
+            >
+              <RotateCcw /> {t("lesson.restart")}
+            </Button>
+            <p className="whitespace-pre-line text-center text-xs text-muted-foreground">
+              {t("lesson.restartDesc")}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
