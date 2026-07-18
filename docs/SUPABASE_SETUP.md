@@ -89,6 +89,13 @@ order (copy-paste their contents), or use the Supabase CLI.
    and table grants, so a signed-in learner keeps the same lesson unlock state
    on every device. Without it, lesson progress still works but stays local to
    each device. Idempotent and safe to re-run.
+9. `supabase/migrations/0009_service_role_grants.sql` — **run this if the Admin
+   dashboard shows all zeros / "permission denied for table …".** Tables created
+   via raw SQL don't automatically grant the **service role** access, so the
+   admin's cross-user reads are denied (Postgres 42501) even though the app
+   itself works fine. This grants the service role full access, reaffirms the
+   `authenticated` grants, and sets default privileges for future tables. RLS is
+   unchanged. Idempotent and safe to re-run.
 
 With the CLI instead:
 
