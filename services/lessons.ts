@@ -115,3 +115,32 @@ export function computeLessonViews(
 export function allLessonsCompleted(views: LessonView[]): boolean {
   return views.length > 0 && views.every((v) => v.status === "completed");
 }
+
+/** The learner's single next objective, for the dashboard's "Next Goal" line. */
+export type LessonGoal =
+  | { kind: "start" }
+  | { kind: "completeLesson"; number: number }
+  | { kind: "masterRemaining"; count: number }
+  | { kind: "allMastered" };
+
+/**
+ * Compute what to do next (§27), so the dashboard can always answer "what now?":
+ *   - every word mastered            → done (celebrate)
+ *   - every lesson done, words left  → master the remaining words
+ *   - no lesson done yet             → start lesson 1
+ *   - some lessons done              → complete the next lesson
+ * Full mastery takes precedence — it's the ultimate goal.
+ */
+export function nextLessonGoal(
+  views: LessonView[],
+  masteredWords: number,
+  totalWords: number
+): LessonGoal {
+  if (totalWords > 0 && masteredWords >= totalWords) return { kind: "allMastered" };
+  const completed = views.filter((v) => v.status === "completed").length;
+  if (views.length > 0 && completed >= views.length) {
+    return { kind: "masterRemaining", count: Math.max(0, totalWords - masteredWords) };
+  }
+  if (completed === 0) return { kind: "start" };
+  return { kind: "completeLesson", number: completed + 1 };
+}

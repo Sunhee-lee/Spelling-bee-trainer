@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   GraduationCap,
+  LayoutDashboard,
   Lock,
   Play,
   Plus,
@@ -19,6 +20,7 @@ import type { Book } from "@/types";
 import {
   allLessonsCompleted,
   computeLessonViews,
+  nextLessonGoal,
   type LessonProgress,
   type LessonStatus,
   type LessonView,
@@ -80,6 +82,15 @@ function LessonCard({ book, view }: { book: Book; view: LessonView }) {
   const lessonParam = number; // 1-based in the URL
   const testEnabled = status === "readyForTest" || status === "completed";
 
+  // Status-aware labels so a Completed lesson reads as review, not new work (§24).
+  const learnLabel: TKey =
+    status === "completed"
+      ? "lesson.learnAgain"
+      : status === "learning"
+        ? "lesson.continueLearning"
+        : "lesson.learn";
+  const testLabel: TKey = status === "completed" ? "lesson.testAgain" : "lesson.test";
+
   return (
     <Card className={locked ? "opacity-70" : undefined}>
       <CardContent className="flex flex-col gap-3">
@@ -125,18 +136,18 @@ function LessonCard({ book, view }: { book: Book; view: LessonView }) {
             <div className="grid grid-cols-2 gap-2">
               <Button asChild variant="outline" className="w-full">
                 <Link href={`/learn/${book.id}?lesson=${lessonParam}`}>
-                  <GraduationCap /> {t("lesson.learn")}
+                  <GraduationCap /> {t(learnLabel)}
                 </Link>
               </Button>
               {testEnabled ? (
                 <Button asChild className="w-full">
                   <Link href={`/books/${book.id}/test?mode=lesson&lesson=${lessonParam}`}>
-                    <Play className="fill-current" /> {t("lesson.test")}
+                    <Play className="fill-current" /> {t(testLabel)}
                   </Link>
                 </Button>
               ) : (
                 <Button className="w-full" disabled>
-                  <Play className="fill-current" /> {t("lesson.test")}
+                  <Play className="fill-current" /> {t(testLabel)}
                 </Button>
               )}
             </div>
@@ -203,6 +214,17 @@ export function LessonListPanel({ book }: { book: Book }) {
   const stats = computeBookStats(book);
   const allWordsMastered = stats.total > 0 && stats.mastered === stats.total;
 
+  // "What should I do next?" — always answerable at a glance (§25/§27).
+  const goal = nextLessonGoal(views, stats.mastered, stats.total);
+  const goalText =
+    goal.kind === "start"
+      ? t("lesson.goalStart")
+      : goal.kind === "completeLesson"
+        ? t("lesson.goalCompleteLesson", { number: goal.number })
+        : goal.kind === "masterRemaining"
+          ? t("lesson.goalMasterRemaining", { count: goal.count })
+          : t("lesson.goalAllMastered");
+
   // Restart clears lesson progress ONLY — words, mastery, streak, statistics,
   // and test history are untouched. Afterwards only Lesson 1 is unlocked.
   function doRestart() {
@@ -221,9 +243,26 @@ export function LessonListPanel({ book }: { book: Book }) {
           <Card className="sbt-pop-in items-center gap-3 border-bee/50 bg-bee/10 py-8 text-center">
             <Trophy className="size-16 text-bee" aria-hidden />
             <h2 className="text-xl font-extrabold">{t("lesson.allMasteredTitle")}</h2>
-            <p className="text-sm font-semibold text-muted-foreground">
+            <p className="whitespace-pre-line text-sm font-semibold text-muted-foreground">
               {t("lesson.allMasteredDesc", { count: stats.total })}
             </p>
+            <div className="mt-2 flex w-full flex-col gap-2">
+              <Button asChild size="lg">
+                <Link href={`/learn/${book.id}`}>
+                  <GraduationCap /> {t("lesson.reviewAll")}
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href={`/books/${book.id}/test?mode=full`}>
+                  <ClipboardCheck /> {t("lesson.testAll")}
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="ghost">
+                <Link href="/">
+                  <LayoutDashboard /> {t("test.backToDashboard")}
+                </Link>
+              </Button>
+            </div>
           </Card>
         </div>
       )}
@@ -277,6 +316,14 @@ export function LessonListPanel({ book }: { book: Book }) {
               </span>
             </div>
             <Progress value={stats.progress} indicatorClassName="bg-bee" />
+          </div>
+
+          {/* Next goal — always tells the learner what to do next (§25/§27). */}
+          <div className="flex flex-col gap-0.5 border-t border-border pt-3">
+            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              {t("lesson.nextGoalLabel")}
+            </span>
+            <span className="text-sm font-semibold">{goalText}</span>
           </div>
         </CardContent>
       </Card>

@@ -7,6 +7,7 @@ import {
   computeLessonViews,
   isLessonBook,
   lessonStatus,
+  nextLessonGoal,
   type LessonProgress,
 } from "@/services/lessons";
 import {
@@ -146,6 +147,31 @@ describe("lessonProgress storage", () => {
     resetBookLessons("b1");
     expect(readBookLessons("b1")).toEqual({});
     expect(readBookLessons("b2")[0].testCompletedAt).toBeTruthy();
+  });
+});
+
+describe("nextLessonGoal (§27)", () => {
+  const words = Array.from({ length: 60 }, (_, i) => word(i + 1)); // 3 lessons
+  const done: LessonProgress = { learnStartedAt: 1, learnCompletedAt: 2, testCompletedAt: 3 };
+
+  it("starts at lesson 1 when nothing is done", () => {
+    const views = computeLessonViews(book({ words }), {});
+    expect(nextLessonGoal(views, 0, 60)).toEqual({ kind: "start" });
+  });
+
+  it("points to the next lesson when some are done", () => {
+    const views = computeLessonViews(book({ words }), { 0: done });
+    expect(nextLessonGoal(views, 5, 60)).toEqual({ kind: "completeLesson", number: 2 });
+  });
+
+  it("switches to mastering the remaining words once all lessons are done", () => {
+    const views = computeLessonViews(book({ words }), { 0: done, 1: done, 2: done });
+    expect(nextLessonGoal(views, 43, 60)).toEqual({ kind: "masterRemaining", count: 17 });
+  });
+
+  it("reports full mastery when every word is mastered (overrides all else)", () => {
+    const views = computeLessonViews(book({ words }), {});
+    expect(nextLessonGoal(views, 60, 60)).toEqual({ kind: "allMastered" });
   });
 });
 
