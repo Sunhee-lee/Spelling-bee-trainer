@@ -83,9 +83,11 @@ export function clearLearnProgress(bookId: string): void {
 /**
  * Decide which card to open on entry, resuming where the learner left off.
  *
- * Resolution order (§7): match the saved word id first (robust to reordering
- * / added / removed words), then fall back to the saved index (clamped to the
- * current list), and finally the first card. Pure so it can be unit-tested.
+ * A session that was already finished re-opens from the FIRST card — re-entering
+ * it (e.g. "Learn Again" on a completed lesson) is a review from the top, not a
+ * resume. An unfinished session resumes: match the saved word id first (robust
+ * to reordering / added / removed words), then the saved index (clamped), then
+ * the first card. Pure so it can be unit-tested.
  */
 export function resolveStartIndex(
   words: Pick<Word, "id">[],
@@ -93,6 +95,9 @@ export function resolveStartIndex(
 ): number {
   if (words.length === 0) return 0;
   if (!progress) return 0;
+
+  // Completed → start the review from card 1.
+  if (progress.completedAt != null) return 0;
 
   if (progress.lastLearnedWordId) {
     const byId = words.findIndex((w) => w.id === progress.lastLearnedWordId);

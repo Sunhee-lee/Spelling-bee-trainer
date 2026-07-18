@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Plus, Search, X } from "lucide-react";
@@ -63,7 +63,14 @@ function LearnRunner() {
   // Resume position is namespaced per lesson so lessons don't clobber each other.
   const progressKey = lessonIndex != null ? `${bookId}#lesson${lessonIndex}` : bookId;
   const session = useLearnSession(progressKey, words, hydrated && !!book);
-  const { phase, flip, next, prev } = session;
+  const { phase, next, prev, flip: rawFlip } = session;
+
+  // The tap hint is only needed until the learner flips their first card.
+  const [everFlipped, setEverFlipped] = useState(false);
+  const flip = useCallback(() => {
+    setEverFlipped(true);
+    rawFlip();
+  }, [rawFlip]);
 
   const exitHref = `/books/${bookId}`;
 
@@ -216,6 +223,7 @@ function LearnRunner() {
             index={session.index}
             total={session.total}
             onFlip={flip}
+            showHint={!everFlipped}
           />
         </div>
       )}

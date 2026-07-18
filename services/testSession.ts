@@ -63,12 +63,20 @@ export function buildTestWords(book: Book, settings: AppSettings): Word[] {
   return shuffleQuestions ? shuffle(questions) : questions;
 }
 
+/** Order words by the "Shuffle Practice Words" setting: shuffled, or by number. */
+function orderByShuffle(words: readonly Word[], shuffleQuestions: boolean): Word[] {
+  return shuffleQuestions
+    ? shuffle(words)
+    : [...words].sort((a, b) => a.number - b.number);
+}
+
 /**
- * Full Test: every word in the book, exactly once, in random order,
- * regardless of mastery. Used for the pre-competition "check everything" run.
+ * Full Test: every word in the book, exactly once, regardless of mastery. Order
+ * follows the "Shuffle Practice Words" setting (shuffled when on, else by
+ * number). Used for the pre-competition "check everything" run.
  */
-export function buildFullTestWords(book: Book): Word[] {
-  return shuffle(book.words);
+export function buildFullTestWords(book: Book, settings: AppSettings): Word[] {
+  return orderByShuffle(book.words, settings.shuffleQuestions);
 }
 
 /** A shuffled review of just the mastered words (optional master check). */
@@ -76,9 +84,15 @@ export function buildMasterReviewWords(book: Book): Word[] {
   return shuffle(book.words.filter((w) => w.mastered));
 }
 
-/** A lesson test: every word in the lesson, shuffled, exactly once. */
-export function buildLessonTestWords(words: readonly Word[]): Word[] {
-  return shuffle(words);
+/**
+ * A lesson test: every word in the lesson, exactly once. Order follows the
+ * "Shuffle Practice Words" setting (shuffled when on, else by number).
+ */
+export function buildLessonTestWords(
+  words: readonly Word[],
+  settings: AppSettings
+): Word[] {
+  return orderByShuffle(words, settings.shuffleQuestions);
 }
 
 /**

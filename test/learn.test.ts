@@ -116,6 +116,16 @@ describe("resolveStartIndex", () => {
   it("returns 0 for an empty word list", () => {
     expect(resolveStartIndex([], null)).toBe(0);
   });
+
+  it("starts a COMPLETED session from card 1 (review, not resume)", () => {
+    const progress: BookLearnProgress = {
+      lastLearnedIndex: 2,
+      lastLearnedWordId: "c",
+      lastLearnedAt: 1,
+      completedAt: 999, // finished once → "Learn Again" reviews from the top
+    };
+    expect(resolveStartIndex(words, progress)).toBe(0);
+  });
 });
 
 describe("learnProgress storage", () => {
