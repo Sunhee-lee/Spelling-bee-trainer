@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   Flame,
+  GraduationCap,
   Play,
   Plus,
   Trophy,
@@ -101,6 +102,13 @@ export function BookDashboardPanel({
       <Button asChild size="xl" className="w-full py-5">
         <Link href={`/books/${book.id}/test?mode=today`}>
           <Play className="fill-current" /> {t("book.todayPractice")}
+        </Link>
+      </Button>
+
+      {/* Learn (flashcards) — study the words before testing */}
+      <Button asChild size="lg" variant="outline" className="w-full">
+        <Link href={`/learn/${book.id}`}>
+          <GraduationCap /> {t("learn.title")}
         </Link>
       </Button>
 

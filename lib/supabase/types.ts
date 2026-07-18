@@ -64,3 +64,14 @@ export interface TestAnswerRow {
   correct: boolean;
   created_at?: string;
 }
+
+export interface LessonProgressRow {
+  id?: string;
+  user_id: string;
+  book_id: string;
+  lesson_number: number;
+  /** ISO timestamp, or null if not yet completed. */
+  learn_completed_at: string | null;
+  test_completed_at: string | null;
+  updated_at?: string;
+}

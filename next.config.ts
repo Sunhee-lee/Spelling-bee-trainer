@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       { source: "/books/:id/words", destination: "/book/words" },
       { source: "/books/:id/master", destination: "/book/master" },
       { source: "/books/:id/test", destination: "/book/test" },
+      { source: "/learn/:id", destination: "/learn" },
     ];
   },
 };

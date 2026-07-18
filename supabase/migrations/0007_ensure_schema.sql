@@ -100,4 +100,18 @@ begin
   end loop;
 end $$;
 
+-- Table privileges ----------------------------------------------------------
+-- PostgREST connects signed-in users as the `authenticated` role, which needs
+-- table-level GRANTs *in addition to* RLS. Tables created via raw SQL don't get
+-- these automatically, which causes "permission denied for table ..." (42501)
+-- even when the RLS policies are correct. Grant broadly; RLS still restricts
+-- each row to its owner.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on
+  public.profiles,
+  public.vocabulary_books,
+  public.words,
+  public.settings
+  to authenticated;
+
 -- Test-history tables + policies live in 0006_ensure_test_history.sql.

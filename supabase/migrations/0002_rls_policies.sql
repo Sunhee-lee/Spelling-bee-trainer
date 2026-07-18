@@ -99,3 +99,19 @@ create policy answers_delete on public.test_answers
     select 1 from public.test_sessions s
     where s.id = session_id and s.user_id = auth.uid()
   ));
+
+-- ---------------------------------------------------------------------------
+-- Table privileges — the PostgREST `authenticated` role needs table-level
+-- GRANTs in addition to the RLS policies above. Without them every write fails
+-- with "permission denied for table ..." (42501). RLS still restricts each row
+-- to its owner.
+-- ---------------------------------------------------------------------------
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on
+  public.profiles,
+  public.vocabulary_books,
+  public.words,
+  public.settings,
+  public.test_sessions,
+  public.test_answers
+  to authenticated;
