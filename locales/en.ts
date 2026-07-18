@@ -359,6 +359,8 @@ export const en: typeof ko = {
     uploadDone: "Uploaded to the cloud.",
     uploadEmpty: "No data on this device to upload.",
     uploadError: "Upload failed. Please try again.",
+    uploadNotPersisted:
+      "Uploaded, but the cloud didn't return the data. Check your Supabase policies/grants (migrations 0002 and 0007).",
     offlineTitle: "You’re using the app offline on this device.",
     offlineDesc: "Log in to back up and sync your progress across devices.",
     login: "Log in",

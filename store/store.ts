@@ -180,7 +180,9 @@ export class VocabStore {
    * copy up (replacing the cloud with it) so it syncs across devices and shows
    * in the admin totals. Returns the outcome so the UI can report it.
    */
-  async uploadDeviceDataToCloud(): Promise<"ok" | "empty" | "error" | "offline"> {
+  async uploadDeviceDataToCloud(): Promise<
+    "ok" | "empty" | "error" | "offline" | "notPersisted"
+  > {
     if (!(this.repo instanceof SupabaseRepository)) return "offline";
     const wordCount = (s: AppState | null): number =>
       s ? s.books.reduce((n, b) => n + b.words.length, 0) : 0;
@@ -192,9 +194,21 @@ export class VocabStore {
     const source =
       wordCount(this.state) >= wordCount(localState) ? this.state : localState;
     if (!source || wordCount(source) === 0) return "empty";
+
     this.commit(source);
     const ok = await this.repo.flushNow();
-    return ok ? "ok" : "error";
+    if (!ok) return "error";
+
+    // Verify it actually landed: read the cloud back. If the write "succeeded"
+    // but the cloud still returns nothing, the data isn't really being stored
+    // (e.g. an RLS SELECT policy or trigger issue) — surface that distinctly
+    // instead of a false success.
+    try {
+      const cloud = await this.repo.load();
+      return wordCount(cloud) > 0 ? "ok" : "notPersisted";
+    } catch {
+      return "notPersisted";
+    }
   }
 
   // --- useSyncExternalStore wiring -----------------------------------------
