@@ -425,6 +425,7 @@ export const en: typeof ko = {
     notConfigured:
       "Admin stats need a server service-role key. Set SUPABASE_SERVICE_ROLE_KEY (see docs/SUPABASE_SETUP.md).",
     loadError: "Couldn’t load stats.",
+    dbErrorTitle: "Database read error (see the cause below)",
     userAccounts: "User Accounts",
     email: "Email",
     signupDate: "Signup Date",

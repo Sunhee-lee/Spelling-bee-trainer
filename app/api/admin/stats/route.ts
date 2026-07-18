@@ -67,10 +67,15 @@ export async function GET(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  // Collect DB errors instead of silently showing 0 — a missing table, wrong
+  // project, or permission problem would otherwise be invisible.
+  const dbErrors: string[] = [];
+
   const count = async (table: string): Promise<number> => {
-    const { count: c } = await admin
+    const { count: c, error } = await admin
       .from(table)
       .select("*", { count: "exact", head: true });
+    if (error) dbErrors.push(`${table}: ${error.message}`);
     return c ?? 0;
   };
 
@@ -97,6 +102,9 @@ export async function GET(request: Request) {
     admin.from("settings").select("user_id, current_streak"),
     count("vocabulary_books"),
   ]);
+  if (sessionsRes.error) dbErrors.push(`test_sessions: ${sessionsRes.error.message}`);
+  if (wordsRes.error) dbErrors.push(`words: ${wordsRes.error.message}`);
+  if (settingsRes.error) dbErrors.push(`settings: ${settingsRes.error.message}`);
 
   const streakByUser = new Map<string, number>();
   for (const r of (settingsRes.data ?? []) as {
@@ -179,5 +187,9 @@ export async function GET(request: Request) {
     activeUsersToday: activeUserIdsToday.size,
     testsCompletedToday,
     users,
+    // Non-empty when a DB read failed — surfaced on the dashboard so an
+    // all-zero screen isn't mistaken for "no data" when it's really a
+    // missing table / wrong project / permission issue.
+    dbErrors,
   });
 }
