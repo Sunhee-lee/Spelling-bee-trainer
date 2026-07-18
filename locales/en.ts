@@ -76,8 +76,11 @@ export const en: typeof ko = {
     allCompleteDesc: "You finished all {count} lessons. Amazing work!",
     reviewAll: "Review All",
     testAll: "Test All Words",
-    restart: "Start Over",
-    restartConfirm: "Reset all lesson progress? Your words and mastery history stay.",
+    restart: "Restart Lessons",
+    restartDesc: "Reset lesson progress only.\nYour mastery, streaks, and test history will be kept.",
+    restartDialogTitle: "Restart lesson progress?",
+    restartDialogBody: "Only lesson progress will be reset.\nMastery and test history will not be deleted.",
+    restartAction: "Restart",
   },
   home: {
     subtitle: "Pick a book and start practicing!",

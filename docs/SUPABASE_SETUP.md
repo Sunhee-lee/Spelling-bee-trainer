@@ -83,6 +83,12 @@ order (copy-paste their contents), or use the Supabase CLI.
    Row-Level-Security policies. A common cause of write failures is RLS being
    enabled while the owner policies are missing — which denies every write;
    this restores them. It changes no existing data and is safe to re-run.
+8. `supabase/migrations/0008_lesson_progress.sql` — **run this to sync the
+   Basic 100 lesson flow across devices.** Adds the `lesson_progress` table
+   (per-lesson `learn_completed_at` / `test_completed_at`), its RLS policies,
+   and table grants, so a signed-in learner keeps the same lesson unlock state
+   on every device. Without it, lesson progress still works but stays local to
+   each device. Idempotent and safe to re-run.
 
 With the CLI instead:
 

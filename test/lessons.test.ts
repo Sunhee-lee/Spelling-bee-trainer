@@ -148,3 +148,39 @@ describe("lessonProgress storage", () => {
     expect(readBookLessons("b2")[0].testCompletedAt).toBeTruthy();
   });
 });
+
+describe("lesson replay policy (§22)", () => {
+  beforeEach(() => window.localStorage.clear());
+
+  it("replaying a completed lesson keeps it Completed with unchanged timestamps", () => {
+    markLessonLearnStarted("b1", 0);
+    markLessonLearnCompleted("b1", 0);
+    markLessonTestCompleted("b1", 0);
+    const before = { ...readBookLessons("b1")[0] };
+    expect(lessonStatus(before)).toBe("completed");
+
+    // Re-learn and re-test the same lesson (a review).
+    markLessonLearnStarted("b1", 0);
+    markLessonLearnCompleted("b1", 0);
+    markLessonTestCompleted("b1", 0);
+
+    const after = readBookLessons("b1")[0];
+    expect(lessonStatus(after)).toBe("completed");
+    // Timestamps are preserved (Completed means "completed at least once").
+    expect(after).toEqual(before);
+  });
+
+  it("replaying a completed lesson does not re-lock the next lesson", () => {
+    const words = Array.from({ length: 60 }, (_, i) => word(i + 1)); // 3 lessons
+    markLessonLearnStarted("b1", 0);
+    markLessonLearnCompleted("b1", 0);
+    markLessonTestCompleted("b1", 0);
+
+    // Replay lesson 0, then check lesson 1 stays unlocked.
+    markLessonLearnCompleted("b1", 0);
+    markLessonTestCompleted("b1", 0);
+    const views = computeLessonViews(book({ words }), readBookLessons("b1"));
+    expect(views[0].status).toBe("completed");
+    expect(views[1].locked).toBe(false);
+  });
+});

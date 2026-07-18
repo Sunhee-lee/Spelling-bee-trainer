@@ -75,8 +75,11 @@ export const ko = {
     allCompleteDesc: "{count}개 레슨을 모두 끝냈어요. 정말 잘했어요!",
     reviewAll: "전체 복습",
     testAll: "모든 단어 테스트",
-    restart: "처음부터 다시 시작",
-    restartConfirm: "레슨 진행 상황을 모두 초기화할까요? 단어와 마스터 기록은 그대로 남아요.",
+    restart: "레슨 처음부터 다시하기",
+    restartDesc: "레슨 진행도만 초기화됩니다.\n마스터 기록과 테스트 기록은 유지됩니다.",
+    restartDialogTitle: "레슨 진행도를 처음부터 다시 시작할까요?",
+    restartDialogBody: "이 작업은 레슨 진행도만 초기화합니다.\n마스터 기록과 테스트 기록은 삭제되지 않습니다.",
+    restartAction: "다시 시작",
   },
   home: {
     subtitle: "단어장을 골라 연습을 시작해요!",

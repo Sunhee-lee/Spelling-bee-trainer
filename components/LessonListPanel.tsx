@@ -24,11 +24,22 @@ import {
   type LessonView,
 } from "@/services/lessons";
 import { readBookLessons, resetBookLessons } from "@/lib/lessonProgress";
+import { deleteCloudBookLessons } from "@/lib/lessonSync";
 import { useTranslation, type TKey } from "@/lib/i18n";
 import { Celebration } from "@/components/Celebration";
 import { HiveBeeIcon } from "@/components/HiveBeeIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STATUS_LABEL: Record<LessonStatus, TKey> = {
   notStarted: "lesson.statusNotStarted",
@@ -125,6 +136,7 @@ function LessonCard({ book, view }: { book: Book; view: LessonView }) {
 export function LessonListPanel({ book }: { book: Book }) {
   const { t } = useTranslation();
   const [progress, setProgress] = useState<Record<number, LessonProgress>>({});
+  const [restartOpen, setRestartOpen] = useState(false);
 
   const refresh = useCallback(() => setProgress(readBookLessons(book.id)), [book.id]);
   useEffect(() => {
@@ -162,10 +174,13 @@ export function LessonListPanel({ book }: { book: Book }) {
 
   const allDone = allLessonsCompleted(views);
 
-  function restart() {
-    if (typeof window !== "undefined" && !window.confirm(t("lesson.restartConfirm"))) return;
+  // Restart clears lesson progress ONLY — words, mastery, streak, statistics,
+  // and test history are untouched. Afterwards only Lesson 1 is unlocked.
+  function doRestart() {
     resetBookLessons(book.id);
+    void deleteCloudBookLessons(book.id).catch(() => {}); // no-op when signed out
     refresh();
+    setRestartOpen(false);
   }
 
   return (
@@ -190,13 +205,40 @@ export function LessonListPanel({ book }: { book: Book }) {
                   <GraduationCap /> {t("lesson.reviewAll")}
                 </Link>
               </Button>
-              <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={restart}>
-                <RotateCcw /> {t("lesson.restart")}
-              </Button>
+              <div className="mt-1 flex flex-col items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground"
+                  onClick={() => setRestartOpen(true)}
+                >
+                  <RotateCcw /> {t("lesson.restart")}
+                </Button>
+                <p className="whitespace-pre-line text-center text-xs text-muted-foreground">
+                  {t("lesson.restartDesc")}
+                </p>
+              </div>
             </div>
           </Card>
         </div>
       )}
+
+      <AlertDialog open={restartOpen} onOpenChange={setRestartOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("lesson.restartDialogTitle")}</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-line">
+              {t("lesson.restartDialogBody")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={doRestart}>
+              {t("lesson.restartAction")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">

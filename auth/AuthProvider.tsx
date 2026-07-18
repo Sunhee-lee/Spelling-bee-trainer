@@ -15,6 +15,12 @@ import { getSupabase, isSupabaseConfigured } from "@/lib/supabase/client";
 import { store } from "@/store/store";
 import { LocalStorageRepository } from "@/storage/localStorageRepository";
 import { SupabaseRepository } from "@/storage/supabaseRepository";
+import {
+  clearLessonCloud,
+  configureLessonCloud,
+  overwriteLocalLessonsFromCloud,
+  reconcileLessonProgress,
+} from "@/lib/lessonSync";
 import { CloudMigrationDialog } from "@/components/CloudMigrationDialog";
 import { SyncStatusToast } from "@/components/SyncStatusToast";
 
@@ -45,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [migration, setMigration] = useState<{
     localState: AppState;
     repo: SupabaseRepository;
+    client: NonNullable<ReturnType<typeof getSupabase>>;
   } | null>(null);
   // Tracks which user id the store is currently wired to (avoids re-switching).
   const wiredUserId = useRef<string | null>(null);
@@ -76,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       void handleLogin(supabase, userId);
     } else if (wiredUserId.current !== null) {
       wiredUserId.current = null;
+      clearLessonCloud();
       void store.setRepository(new LocalStorageRepository());
     }
   }, [session, supabase]);
@@ -98,23 +106,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (localHasData && cloud === null) {
       const localState = await local.load();
       if (localState) {
-        setMigration({ localState, repo });
+        setMigration({ localState, repo, client });
         return;
       }
     }
     await store.setRepository(repo);
+    // Steady-state login: cloud is the source of truth; union-merge so nothing
+    // is lost, then keep both in sync.
+    configureLessonCloud(client, userId);
+    await reconcileLessonProgress();
   }
 
   const uploadLocal = useCallback(async () => {
     if (!migration) return;
     await store.setRepository(migration.repo);
     await store.replaceAll(migration.localState);
+    // First-login migration: push this device's local lesson progress up (the
+    // cloud is empty, so reconcile uploads it all — same UX as word upload).
+    configureLessonCloud(migration.client, migration.repo.userId);
+    await reconcileLessonProgress();
     setMigration(null);
   }, [migration]);
 
   const startFresh = useCallback(async () => {
     if (!migration) return;
     await store.setRepository(migration.repo);
+    // Start fresh: discard this device's local lesson progress in favour of the
+    // (empty) cloud, matching the word "start fresh" choice.
+    configureLessonCloud(migration.client, migration.repo.userId);
+    await overwriteLocalLessonsFromCloud();
     setMigration(null);
   }, [migration]);
 

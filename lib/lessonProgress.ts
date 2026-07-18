@@ -15,6 +15,25 @@ const LESSONS_KEY = "spelling-bee-trainer/lessons";
 /** bookId -> lessonIndex(string) -> progress */
 type LessonsMap = Record<string, Record<string, LessonProgress>>;
 
+/** Numeric-keyed view of the whole map, used by the cloud-sync layer. */
+export type LessonProgressByBook = Record<string, Record<number, LessonProgress>>;
+
+/**
+ * Optional observer notified after a single lesson's progress changes (via the
+ * mark* helpers). The cloud-sync layer registers this to push completions to
+ * Supabase, without lessonProgress needing to know about Supabase. Bulk writes
+ * (writeAllLessons) deliberately do NOT notify — the sync layer drives those.
+ */
+type WriteObserver = (
+  bookId: string,
+  lessonIndex: number,
+  progress: LessonProgress
+) => void;
+let observer: WriteObserver | null = null;
+export function setLessonWriteObserver(cb: WriteObserver | null): void {
+  observer = cb;
+}
+
 function hasStorage(): boolean {
   try {
     return typeof window !== "undefined" && !!window.localStorage;
@@ -61,6 +80,28 @@ function patch(bookId: string, lessonIndex: number, next: LessonProgress): void 
   book[key] = { ...book[key], ...next };
   map[bookId] = book;
   writeAll(map);
+  observer?.(bookId, lessonIndex, book[key]);
+}
+
+/** The whole progress map (numeric lesson keys). Used by the cloud-sync layer. */
+export function readAllLessons(): LessonProgressByBook {
+  const raw = readAll();
+  const out: LessonProgressByBook = {};
+  for (const [bookId, lessons] of Object.entries(raw)) {
+    out[bookId] = {};
+    for (const [k, v] of Object.entries(lessons)) out[bookId][Number(k)] = v;
+  }
+  return out;
+}
+
+/** Replace the whole local cache (e.g. after reconciling with the cloud). */
+export function writeAllLessons(map: LessonProgressByBook): void {
+  const raw: LessonsMap = {};
+  for (const [bookId, lessons] of Object.entries(map)) {
+    raw[bookId] = {};
+    for (const [k, v] of Object.entries(lessons)) raw[bookId][String(k)] = v;
+  }
+  writeAll(raw);
 }
 
 /** Mark that the learner opened this lesson's Learn session (→ "Learning"). */
