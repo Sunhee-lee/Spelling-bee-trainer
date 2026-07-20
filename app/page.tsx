@@ -6,9 +6,11 @@ import { ChevronRight, Lock, Settings, Trophy } from "lucide-react";
 import type { Book } from "@/types";
 import { useAppState } from "@/store/useVocabStore";
 import { computeBookStats, isBookComplete } from "@/services/stats";
+import { isLessonBook } from "@/services/lessons";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { BookDashboardPanel } from "@/components/BookDashboardPanel";
+import { LessonListPanel } from "@/components/LessonListPanel";
 import { ExitOnBack } from "@/components/ExitOnBack";
 import { InstallButton } from "@/components/InstallButton";
 import { Button } from "@/components/ui/button";
@@ -119,10 +121,16 @@ export default function HomePage() {
           {primary && (
             <section className="mt-2 flex flex-col gap-4">
               <h2 className="text-2xl font-extrabold">{primary.name}</h2>
-              <BookDashboardPanel
-                book={primary}
-                currentStreak={state.streak.currentStreak}
-              />
+              {/* Basic 100 is a staged lesson book — show the lesson list (pick
+                  a lesson) rather than jumping straight into a test. */}
+              {isLessonBook(primary) ? (
+                <LessonListPanel book={primary} />
+              ) : (
+                <BookDashboardPanel
+                  book={primary}
+                  currentStreak={state.streak.currentStreak}
+                />
+              )}
             </section>
           )}
 
