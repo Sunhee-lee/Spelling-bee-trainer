@@ -103,6 +103,7 @@ export const en: typeof ko = {
     subtitle: "Pick a book and start practicing!",
     moreBooks: "More Books",
     unlockedBanner: "{prereq} complete! 🔓 {book} is now unlocked.",
+    exitHint: "Press back again to exit.",
   },
   book: {
     remaining: "{count} words remaining until {book} is fully mastered.",
