@@ -9,6 +9,7 @@ import { computeBookStats, isBookComplete } from "@/services/stats";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { BookDashboardPanel } from "@/components/BookDashboardPanel";
+import { ExitOnBack } from "@/components/ExitOnBack";
 import { InstallButton } from "@/components/InstallButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -83,6 +84,7 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+      <ExitOnBack />
       <AppHeader
         title={t("common.appName")}
         mascot
