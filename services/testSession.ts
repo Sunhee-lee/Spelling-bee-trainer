@@ -11,55 +11,50 @@ function shuffle<T>(items: readonly T[]): T[] {
 }
 
 /**
- * Build the list of words for a test, by priority:
+ * Build the list of words for Today's Practice, by priority:
  *   1. Review   — not mastered and due now (nextReviewTest <= currentTest)
  *   2. Learning — not mastered and not yet due
- *   3. Master check — a small anti-forgetting sample of mastered words.
+ *   3. Spaced review — mastered words whose spaced-repetition interval is due
+ *      now (nextReviewTest <= currentTest).
  *
- * Mastered words are otherwise excluded from normal tests. The master-check
- * is `round(masteredCount * masterReviewRate)`, but never more than the room
- * left after the non-mastered words are placed (so learning always comes
- * first). The test is never padded with mastered words to reach
- * `questionsPerTest` — a small book simply yields a shorter test.
+ * Mastered words are excluded by default and resurface ONLY when their SRS
+ * review is due — so practice stays focused on words still being learned while
+ * mastered words come back rarely, at growing intervals, to guard against
+ * forgetting. There is no random master sample. The test is never padded to
+ * reach `questionsPerTest` — a small book simply yields a shorter test.
  *
- * As a special case, a fully-mastered book runs a maintenance review of its
- * mastered words (otherwise "Start Test" would do nothing).
+ * As a special case, a fully-mastered book with nothing due still runs a
+ * maintenance review of its mastered words (otherwise "Start Test" would do
+ * nothing).
  */
 export function buildTestWords(book: Book, settings: AppSettings): Word[] {
-  const { questionsPerTest, masterReviewRate, shuffleQuestions } = settings;
+  const { questionsPerTest, shuffleQuestions } = settings;
 
   const order = (words: Word[]): Word[] =>
     shuffleQuestions
       ? shuffle(words)
       : [...words].sort((a, b) => a.number - b.number);
 
-  const mastered = book.words.filter((w) => w.mastered);
-  const notMastered = book.words.filter((w) => !w.mastered);
+  const isDue = (w: Word) => w.nextReviewTest <= book.currentTest;
 
-  const due = order(notMastered.filter((w) => w.nextReviewTest <= book.currentTest));
-  const notDue = order(notMastered.filter((w) => w.nextReviewTest > book.currentTest));
-  const nonMastered = [...due, ...notDue];
+  const notMastered = book.words.filter((w) => !w.mastered);
+  const dueLearning = order(notMastered.filter(isDue));
+  const notDueLearning = order(notMastered.filter((w) => !isDue(w)));
+  // Mastered words resurface only when their spaced-review interval is due.
+  const masteredDue = order(book.words.filter((w) => w.mastered && isDue(w)));
 
   const capacity = questionsPerTest > 0 ? questionsPerTest : book.words.length;
 
-  let learning: Word[];
-  let masterCheck: number;
-  if (nonMastered.length === 0) {
-    // Everything is mastered — review the mastered words to keep them fresh.
-    learning = [];
-    masterCheck = Math.min(capacity, mastered.length);
-  } else {
-    learning = nonMastered.slice(0, capacity);
-    const room = capacity - learning.length;
-    masterCheck = Math.min(
-      Math.round(mastered.length * masterReviewRate),
-      mastered.length,
-      room
-    );
+  // Learning first (due, then ahead), then due spaced-reviews of mastered words.
+  let queue = [...dueLearning, ...notDueLearning, ...masteredDue];
+
+  // Fully-mastered book with nothing due → maintenance review of mastered words
+  // so the test is never empty.
+  if (queue.length === 0) {
+    queue = order(book.words.filter((w) => w.mastered));
   }
 
-  const masterPicked = order(mastered).slice(0, masterCheck);
-  const questions = [...learning, ...masterPicked];
+  const questions = queue.slice(0, capacity);
   return shuffleQuestions ? shuffle(questions) : questions;
 }
 

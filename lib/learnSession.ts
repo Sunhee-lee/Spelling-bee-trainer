@@ -4,6 +4,19 @@
  * adds persistence.
  */
 
+import type { Word } from "@/types";
+
+/**
+ * Words to study in a Learn session: the not-yet-mastered ones, so review stays
+ * focused on what the learner hasn't nailed. If every word is already mastered,
+ * fall back to the full set so the session still works as a plain review
+ * instead of showing nothing.
+ */
+export function selectLearnWords(words: Word[]): Word[] {
+  const unmastered = words.filter((w) => !w.mastered);
+  return unmastered.length > 0 ? unmastered : words;
+}
+
 export type LearnPhase = "card" | "complete";
 
 export interface LearnState {

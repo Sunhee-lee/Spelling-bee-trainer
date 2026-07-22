@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import type { Word } from "@/types";
 import {
   initLearnState,
   learnReducer,
+  selectLearnWords,
   type LearnState,
 } from "@/lib/learnSession";
 import {
@@ -72,6 +74,33 @@ describe("learnReducer", () => {
   it("initLearnState starts on the front at the given index", () => {
     expect(initLearnState(2)).toEqual({ index: 2, flipped: false, phase: "card" });
     expect(initLearnState(-1).index).toBe(0);
+  });
+});
+
+describe("selectLearnWords", () => {
+  const word = (n: number, mastered: boolean): Word => ({
+    id: `w${n}`,
+    number: n,
+    word: `word${n}`,
+    meaning: `뜻${n}`,
+    mastered,
+    consecutiveCorrect: mastered ? 4 : 0,
+    level: 0,
+    nextReviewTest: 0,
+  });
+
+  it("keeps only not-yet-mastered words", () => {
+    const words = [word(1, true), word(2, false), word(3, true), word(4, false)];
+    expect(selectLearnWords(words).map((w) => w.number)).toEqual([2, 4]);
+  });
+
+  it("falls back to the full set when every word is mastered", () => {
+    const words = [word(1, true), word(2, true)];
+    expect(selectLearnWords(words).map((w) => w.number)).toEqual([1, 2]);
+  });
+
+  it("returns an empty list for an empty book", () => {
+    expect(selectLearnWords([])).toEqual([]);
   });
 });
 

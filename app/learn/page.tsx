@@ -8,6 +8,7 @@ import { BookOpen, Plus, Search, X } from "lucide-react";
 import { useBookId } from "@/lib/useBookId";
 import { useAppState } from "@/store/useVocabStore";
 import { useLearnSession } from "@/lib/useLearnSession";
+import { selectLearnWords } from "@/lib/learnSession";
 import { computeLessons, isLessonBook } from "@/services/lessons";
 import { markLessonLearnCompleted, markLessonLearnStarted } from "@/lib/lessonProgress";
 import { useTranslation } from "@/lib/i18n";
@@ -54,10 +55,15 @@ function LearnRunner() {
       : null;
 
   // Words for the session — a single lesson, or the whole book (by number).
+  // Learn focuses on not-yet-mastered words; when all are mastered it falls
+  // back to the full set so the session still works as a review.
   const words = useMemo(() => {
     if (!book) return [];
-    if (lessonIndex != null) return lessons[lessonIndex].words;
-    return [...book.words].sort((a, b) => a.number - b.number);
+    const base =
+      lessonIndex != null
+        ? lessons[lessonIndex].words
+        : [...book.words].sort((a, b) => a.number - b.number);
+    return selectLearnWords(base);
   }, [book, lessonIndex, lessons]);
 
   // Resume position is namespaced per lesson so lessons don't clobber each other.
