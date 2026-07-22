@@ -37,7 +37,13 @@ const PAGE_EDGE = {
     "repeating-linear-gradient(to right, rgba(0,0,0,0.10) 0 1px, transparent 1px 3px)",
 };
 
-/** A tappable book on the home screen — styled like a closed notebook. */
+/** A single metallic loop of the spiral binding. */
+const COIL = {
+  backgroundImage: "linear-gradient(to bottom, #f8fafc, #cbd5e1 45%, #64748b)",
+  boxShadow: "0 1px 1px rgba(0,0,0,0.35)",
+};
+
+/** A tappable book on the home screen — styled like a spiral mini notebook. */
 function BookRow({
   book,
   index,
@@ -57,26 +63,33 @@ function BookRow({
   return (
     <Link href={`/books/${book.id}`} className="block">
       <div
-        className={`group relative flex h-24 items-stretch overflow-hidden rounded-lg border border-border shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md ${cover.tint}`}
+        className={`group relative h-32 overflow-hidden rounded-lg border border-border shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md ${cover.tint}`}
       >
-        {/* Spine with spiral-binding holes down the bound edge. */}
+        {/* Colored spine down the bound edge. */}
         <div
-          className={`flex w-3.5 shrink-0 flex-col items-center justify-center gap-2 ${cover.bar}`}
-        >
-          <span className="size-1 rounded-full bg-background/70" />
-          <span className="size-1 rounded-full bg-background/70" />
-          <span className="size-1 rounded-full bg-background/70" />
+          className={`absolute inset-y-0 left-0 w-7 ${cover.bar}`}
+          aria-hidden
+        />
+        {/* Spiral binding — metallic coils threaded down the spine. */}
+        <div className="absolute inset-y-0 left-2 flex flex-col justify-around py-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <span
+              key={i}
+              className="h-2.5 w-5 rounded-full"
+              style={COIL}
+              aria-hidden
+            />
+          ))}
         </div>
-        <div className="w-px shrink-0 bg-black/5" />
 
         {/* Cover face. */}
-        <div className="flex min-w-0 flex-1 items-center gap-3 px-4">
+        <div className="flex h-full items-center gap-3 pl-12 pr-4">
           <LockIcon
             className={`size-5 shrink-0 ${book.locked ? "text-muted-foreground" : "text-foreground/70"}`}
             aria-hidden
           />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <p className="truncate text-lg font-bold">{book.name}</p>
+            <p className="truncate text-xl font-bold">{book.name}</p>
             {book.locked ? (
               <p className="text-sm text-muted-foreground">
                 {t("book.lockedTitle", {
@@ -94,7 +107,7 @@ function BookRow({
         </div>
 
         {/* Paper fore-edge on the right. */}
-        <div className="w-2 shrink-0" style={PAGE_EDGE} />
+        <div className="absolute inset-y-0 right-0 w-2" style={PAGE_EDGE} />
       </div>
     </Link>
   );
