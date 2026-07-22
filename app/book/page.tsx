@@ -19,7 +19,6 @@ import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 import { BookDashboardPanel } from "@/components/BookDashboardPanel";
 import { LessonListPanel } from "@/components/LessonListPanel";
-import { BookOptions } from "@/components/BookOptions";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -162,16 +161,6 @@ export default function BookDashboardPage() {
           book={book}
           currentStreak={state.streak.currentStreak}
         />
-      )}
-
-      {/* Book options only for user-created books (built-in names stay fixed). */}
-      {!book.builtIn && (
-        <section className="flex flex-col gap-3 border-t border-border pt-6">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            {t("book.bookOptions")}
-          </h2>
-          <BookOptions book={book} />
-        </section>
       )}
     </main>
   );
