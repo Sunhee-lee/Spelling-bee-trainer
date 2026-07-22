@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight,
-  Minus,
   Plus,
   RotateCcw,
   Settings,
@@ -34,7 +33,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
@@ -49,9 +47,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const APP_VERSION = "1.0.0";
-const QPT_MIN = 5;
-const QPT_MAX = 50;
-const QPT_STEP = 5;
 
 function NewBookDialog() {
   const actions = useActions();
@@ -117,12 +112,6 @@ export default function SettingsPage() {
   const [clearStep2, setClearStep2] = useState(false);
 
   const showAdmin = configured && isAdminEmail(user?.email);
-  const masterPercent = Math.round(settings.masterReviewRate * 100);
-
-  function bumpQuestions(delta: number) {
-    const next = Math.min(QPT_MAX, Math.max(QPT_MIN, settings.questionsPerTest + delta));
-    actions.updateSettings({ questionsPerTest: next });
-  }
 
   function setLanguage(language: Language) {
     actions.updateSettings({ language });
@@ -171,43 +160,6 @@ export default function SettingsPage() {
               <CardTitle>{t("settings.testSettings")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-6">
-              {/* Questions per test — stepper */}
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <Label>{t("settings.questionsPerTest")}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t("settings.questionsPerTestDesc")}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-12"
-                    aria-label="-"
-                    onClick={() => bumpQuestions(-QPT_STEP)}
-                    disabled={settings.questionsPerTest <= QPT_MIN}
-                  >
-                    <Minus />
-                  </Button>
-                  <span className="w-24 text-center text-sm font-bold tabular-nums">
-                    {t("settings.questionsUnit", {
-                      count: settings.questionsPerTest,
-                    })}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-12"
-                    aria-label="+"
-                    onClick={() => bumpQuestions(QPT_STEP)}
-                    disabled={settings.questionsPerTest >= QPT_MAX}
-                  >
-                    <Plus />
-                  </Button>
-                </div>
-              </div>
-
               {/* Shuffle — switch */}
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -221,28 +173,6 @@ export default function SettingsPage() {
                   checked={settings.shuffleQuestions}
                   onCheckedChange={(checked) =>
                     actions.updateSettings({ shuffleQuestions: checked })
-                  }
-                />
-              </div>
-
-              {/* Master review rate — slider */}
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <Label>{t("settings.masterReviewRate")}</Label>
-                  <span className="rounded-full bg-bee/20 px-2.5 py-0.5 text-sm font-bold tabular-nums">
-                    {masterPercent}%
-                  </span>
-                </div>
-                <p className="-mt-1 text-sm text-muted-foreground">
-                  {t("settings.masterReviewRateDesc")}
-                </p>
-                <Slider
-                  value={[masterPercent]}
-                  min={0}
-                  max={100}
-                  step={5}
-                  onValueChange={([v]) =>
-                    actions.updateSettings({ masterReviewRate: v / 100 })
                   }
                 />
               </div>
