@@ -37,12 +37,6 @@ const PAGE_EDGE = {
     "repeating-linear-gradient(to right, rgba(0,0,0,0.10) 0 1px, transparent 1px 3px)",
 };
 
-/** A single metallic loop of the spiral binding. */
-const COIL = {
-  backgroundImage: "linear-gradient(to bottom, #f8fafc, #cbd5e1 45%, #64748b)",
-  boxShadow: "0 1px 1px rgba(0,0,0,0.35)",
-};
-
 /** A tappable book on the home screen — styled like a spiral mini notebook. */
 function BookRow({
   book,
@@ -65,25 +59,18 @@ function BookRow({
       <div
         className={`group relative h-32 overflow-hidden rounded-lg border border-border shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md ${cover.tint}`}
       >
-        {/* Colored spine down the bound edge. */}
+        {/* Colored spine with binding holes punched down the bound edge. */}
         <div
-          className={`absolute inset-y-0 left-0 w-7 ${cover.bar}`}
+          className={`absolute inset-y-0 left-0 flex w-5 flex-col items-center justify-around py-4 ${cover.bar}`}
           aria-hidden
-        />
-        {/* Spiral binding — metallic coils threaded down the spine. */}
-        <div className="absolute inset-y-0 left-2 flex flex-col justify-around py-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <span
-              key={i}
-              className="h-2.5 w-5 rounded-full"
-              style={COIL}
-              aria-hidden
-            />
+        >
+          {Array.from({ length: 7 }).map((_, i) => (
+            <span key={i} className="size-1.5 rounded-full bg-background/75" />
           ))}
         </div>
 
         {/* Cover face. */}
-        <div className="flex h-full items-center gap-3 pl-12 pr-4">
+        <div className="flex h-full items-center gap-3 pl-9 pr-4">
           <LockIcon
             className={`size-5 shrink-0 ${book.locked ? "text-muted-foreground" : "text-foreground/70"}`}
             aria-hidden
