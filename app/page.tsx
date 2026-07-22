@@ -19,21 +19,60 @@ import { AppHeader } from "@/components/AppHeader";
 import { ExitOnBack } from "@/components/ExitOnBack";
 import { InstallButton } from "@/components/InstallButton";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
-/** A tappable book row on the home screen — opens the book's page. */
-function BookRow({ book, prerequisite }: { book: Book; prerequisite?: Book }) {
+/** Cover colors cycled across unlocked books so each looks like a
+ * different-colored notebook (spine band + soft cover tint). */
+const COVERS = [
+  { bar: "bg-bee", tint: "bg-bee/15" },
+  { bar: "bg-grass", tint: "bg-grass/15" },
+  { bar: "bg-sky", tint: "bg-sky/15" },
+  { bar: "bg-berry", tint: "bg-berry/15" },
+  { bar: "bg-grape", tint: "bg-grape/15" },
+];
+
+/** The paper fore-edge on the right of a closed book. */
+const PAGE_EDGE = {
+  backgroundImage:
+    "repeating-linear-gradient(to right, rgba(0,0,0,0.10) 0 1px, transparent 1px 3px)",
+};
+
+/** A tappable book on the home screen — styled like a closed notebook. */
+function BookRow({
+  book,
+  index,
+  prerequisite,
+}: {
+  book: Book;
+  index: number;
+  prerequisite?: Book;
+}) {
   const { t } = useTranslation();
   const stats = computeBookStats(book);
   const LockIcon = book.locked ? Lock : LockOpen;
+  const cover = book.locked
+    ? { bar: "bg-muted-foreground/40", tint: "bg-muted/60" }
+    : COVERS[index % COVERS.length];
 
   return (
     <Link href={`/books/${book.id}`} className="block">
-      <Card className="py-4 transition-colors hover:bg-accent">
-        <CardContent className="flex items-center gap-3">
-          {/* Lock in front of the name: open when unlocked, closed when locked. */}
+      <div
+        className={`group relative flex h-24 items-stretch overflow-hidden rounded-lg border border-border shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md ${cover.tint}`}
+      >
+        {/* Spine with spiral-binding holes down the bound edge. */}
+        <div
+          className={`flex w-3.5 shrink-0 flex-col items-center justify-center gap-2 ${cover.bar}`}
+        >
+          <span className="size-1 rounded-full bg-background/70" />
+          <span className="size-1 rounded-full bg-background/70" />
+          <span className="size-1 rounded-full bg-background/70" />
+        </div>
+        <div className="w-px shrink-0 bg-black/5" />
+
+        {/* Cover face. */}
+        <div className="flex min-w-0 flex-1 items-center gap-3 px-4">
           <LockIcon
-            className={`size-5 shrink-0 ${book.locked ? "text-muted-foreground" : "text-bee"}`}
+            className={`size-5 shrink-0 ${book.locked ? "text-muted-foreground" : "text-foreground/70"}`}
             aria-hidden
           />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -52,8 +91,11 @@ function BookRow({ book, prerequisite }: { book: Book; prerequisite?: Book }) {
             )}
           </div>
           <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Paper fore-edge on the right. */}
+        <div className="w-2 shrink-0" style={PAGE_EDGE} />
+      </div>
     </Link>
   );
 }
@@ -116,10 +158,11 @@ export default function HomePage() {
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
               {t("home.books")}
             </h2>
-            {state.books.map((book) => (
+            {state.books.map((book, index) => (
               <BookRow
                 key={book.id}
                 book={book}
+                index={index}
                 prerequisite={prerequisiteOf(book)}
               />
             ))}
