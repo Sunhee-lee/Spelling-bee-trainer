@@ -100,6 +100,7 @@ export const ko = {
   },
   home: {
     subtitle: "단어장을 골라 연습을 시작해요!",
+    books: "단어장",
     moreBooks: "다른 단어장",
     unlockedBanner: "{prereq} 완료! 🔓 이제 {book} 잠금이 풀렸어요.",
     exitHint: "뒤로가기를 한 번 더 누르면 종료돼요.",

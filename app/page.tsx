@@ -1,56 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Lock, Settings, Trophy } from "lucide-react";
+import {
+  BarChart3,
+  BookOpen,
+  ChevronRight,
+  Lock,
+  LockOpen,
+  Settings,
+  Trophy,
+} from "lucide-react";
 
 import type { Book } from "@/types";
 import { useAppState } from "@/store/useVocabStore";
 import { computeBookStats, isBookComplete } from "@/services/stats";
-import { isLessonBook } from "@/services/lessons";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
-import { BookDashboardPanel } from "@/components/BookDashboardPanel";
-import { LessonListPanel } from "@/components/LessonListPanel";
 import { ExitOnBack } from "@/components/ExitOnBack";
 import { InstallButton } from "@/components/InstallButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-function SecondaryBookCard({
-  book,
-  prerequisite,
-}: {
-  book: Book;
-  prerequisite?: Book;
-}) {
+/** A tappable book row on the home screen — opens the book's page. */
+function BookRow({ book, prerequisite }: { book: Book; prerequisite?: Book }) {
   const { t } = useTranslation();
   const stats = computeBookStats(book);
-  const preStats = prerequisite ? computeBookStats(prerequisite) : undefined;
+  const LockIcon = book.locked ? Lock : LockOpen;
 
   return (
     <Link href={`/books/${book.id}`} className="block">
       <Card className="py-4 transition-colors hover:bg-accent">
-        <CardContent className="flex items-center gap-4">
+        <CardContent className="flex items-center gap-3">
+          {/* Lock in front of the name: open when unlocked, closed when locked. */}
+          <LockIcon
+            className={`size-5 shrink-0 ${book.locked ? "text-muted-foreground" : "text-bee"}`}
+            aria-hidden
+          />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <p className="flex items-center gap-1.5 truncate font-bold">
-              {book.locked && (
-                <Lock className="size-4 shrink-0 text-muted-foreground" />
-              )}
-              {book.name}
-            </p>
+            <p className="truncate text-lg font-bold">{book.name}</p>
             {book.locked ? (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  {t("book.lockedTitle", {
-                    prereq: prerequisite?.name ?? "Basic 100",
-                  })}
-                </p>
-                <p className="text-xs tabular-nums text-muted-foreground">
-                  {preStats && preStats.total > 0
-                    ? `(${preStats.mastered} / ${preStats.total})`
-                    : "—"}
-                </p>
-              </>
+              <p className="text-sm text-muted-foreground">
+                {t("book.lockedTitle", {
+                  prereq: prerequisite?.name ?? "Basic 100",
+                })}
+              </p>
             ) : (
               <p className="text-sm text-muted-foreground">
                 {t("progress.master")} {stats.mastered} / {stats.total} ·{" "}
@@ -70,7 +63,6 @@ export default function HomePage() {
   const { t } = useTranslation();
 
   const primary = state.books[0];
-  const others = state.books.slice(1);
 
   const unlocked = hydrated
     ? state.books.find((b) => {
@@ -90,6 +82,7 @@ export default function HomePage() {
       <AppHeader
         title={t("common.appName")}
         mascot
+        subtitle={t("home.subtitle")}
         action={
           <div className="flex items-center gap-2">
             <InstallButton />
@@ -118,35 +111,39 @@ export default function HomePage() {
             </div>
           )}
 
-          {primary && (
-            <section className="mt-2 flex flex-col gap-4">
-              <h2 className="text-2xl font-extrabold">{primary.name}</h2>
-              {/* Basic 100 is a staged lesson book — show the lesson list (pick
-                  a lesson) rather than jumping straight into a test. */}
-              {isLessonBook(primary) ? (
-                <LessonListPanel book={primary} />
-              ) : (
-                <BookDashboardPanel
-                  book={primary}
-                  currentStreak={state.streak.currentStreak}
-                />
-              )}
-            </section>
-          )}
+          {/* Book selector — tap a book to enter it. */}
+          <section className="flex flex-col gap-2.5">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+              {t("home.books")}
+            </h2>
+            {state.books.map((book) => (
+              <BookRow
+                key={book.id}
+                book={book}
+                prerequisite={prerequisiteOf(book)}
+              />
+            ))}
+          </section>
 
-          {others.length > 0 && (
-            <section className="flex flex-col gap-2.5 border-t border-border/60 pt-5">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                {t("home.moreBooks")}
-              </h2>
-              {others.map((book) => (
-                <SecondaryBookCard
-                  key={book.id}
-                  book={book}
-                  prerequisite={prerequisiteOf(book)}
-                />
-              ))}
-            </section>
+          {/* Quick links pinned to the bottom of the home screen. */}
+          {primary && (
+            <div className="mt-1 flex flex-col gap-1 border-t border-border pt-5">
+              <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
+                <Link href={`/books/${primary.id}/master`}>
+                  <Trophy /> {t("master.title")}
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
+                <Link href={`/statistics?book=${primary.id}`}>
+                  <BarChart3 /> {t("stats.link")}
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
+                <Link href={`/books/${primary.id}/words`}>
+                  <BookOpen /> {t("book.manageWords")}
+                </Link>
+              </Button>
+            </div>
           )}
         </>
       )}
