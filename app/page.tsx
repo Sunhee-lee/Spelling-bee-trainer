@@ -1,21 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import {
-  BarChart3,
-  BookOpen,
-  ChevronRight,
-  Lock,
-  LockOpen,
-  Settings,
-  Trophy,
-} from "lucide-react";
+import { ChevronRight, Lock, LockOpen, Settings, Trophy } from "lucide-react";
 
 import type { Book } from "@/types";
 import { useAppState } from "@/store/useVocabStore";
 import { computeBookStats, isBookComplete } from "@/services/stats";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
+import { BookQuickLinks } from "@/components/BookQuickLinks";
 import { ExitOnBack } from "@/components/ExitOnBack";
 import { InstallButton } from "@/components/InstallButton";
 import { Button } from "@/components/ui/button";
@@ -169,25 +162,7 @@ export default function HomePage() {
           </section>
 
           {/* Quick links pinned to the bottom of the home screen. */}
-          {primary && (
-            <div className="mt-1 flex flex-col gap-1 border-t border-border pt-5">
-              <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
-                <Link href={`/books/${primary.id}/master`}>
-                  <Trophy /> {t("master.title")}
-                </Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
-                <Link href={`/statistics?book=${primary.id}`}>
-                  <BarChart3 /> {t("stats.link")}
-                </Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
-                <Link href={`/books/${primary.id}/words`}>
-                  <BookOpen /> {t("book.manageWords")}
-                </Link>
-              </Button>
-            </div>
-          )}
+          {primary && <BookQuickLinks bookId={primary.id} />}
         </>
       )}
     </main>

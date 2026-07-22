@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
-  BarChart3,
-  BookOpen,
   CheckCircle2,
   ClipboardCheck,
   GraduationCap,
   LayoutDashboard,
+  Layers,
   Lock,
   Play,
   Plus,
@@ -31,6 +30,8 @@ import { deleteCloudBookLessons } from "@/lib/lessonSync";
 import { useTranslation, type TKey } from "@/lib/i18n";
 import { Celebration } from "@/components/Celebration";
 import { HiveBeeIcon } from "@/components/HiveBeeIcon";
+import { BookProgressCard } from "@/components/BookProgressCard";
+import { BookQuickLinks } from "@/components/BookQuickLinks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -210,6 +211,11 @@ export function LessonListPanel({ book }: { book: Book }) {
   const allDone = allLessonsCompleted(views);
   const completedCount = views.filter((v) => v.status === "completed").length;
 
+  // The lesson the learner should work on next — drives the "Continue" button.
+  const currentLesson =
+    views.find((v) => !v.locked && v.status !== "completed") ?? views[0];
+  const noneStarted = views.every((v) => v.status === "notStarted");
+
   // Master progress is tracked independently of lesson completion (§23).
   const stats = computeBookStats(book);
   const allWordsMastered = stats.total > 0 && stats.mastered === stats.total;
@@ -293,40 +299,22 @@ export function LessonListPanel({ book }: { book: Book }) {
         </div>
       )}
 
-      {/* Two independent progress meters (§23). */}
-      <Card>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-sm font-semibold">
-              <span className="text-muted-foreground">{t("lesson.lessonProgressLabel")}</span>
-              <span className="tabular-nums">
-                {t("lesson.progressLessons", { completed: completedCount, total: views.length })}
-              </span>
-            </div>
-            <Progress
-              value={(completedCount / views.length) * 100}
-              indicatorClassName="bg-grass"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-sm font-semibold">
-              <span className="text-muted-foreground">{t("lesson.masterProgressLabel")}</span>
-              <span className="tabular-nums">
-                {t("lesson.progressMastered", { mastered: stats.mastered, total: stats.total })}
-              </span>
-            </div>
-            <Progress value={stats.progress} indicatorClassName="bg-bee" />
-          </div>
+      {/* Shared progress card: mastery headline + lesson meter + next goal. */}
+      <BookProgressCard
+        book={book}
+        lesson={{ completed: completedCount, total: views.length }}
+        goalText={goalText}
+      />
 
-          {/* Next goal — always tells the learner what to do next (§25/§27). */}
-          <div className="flex flex-col gap-0.5 border-t border-border pt-3">
-            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {t("lesson.nextGoalLabel")}
-            </span>
-            <span className="text-sm font-semibold">{goalText}</span>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Representative action — jump straight into the current lesson. */}
+      {!allDone && currentLesson && (
+        <Button asChild size="xl" className="w-full py-5">
+          <Link href={`/learn/${book.id}?lesson=${currentLesson.number}`}>
+            <Play className="fill-current" />{" "}
+            {t(noneStarted ? "book.startLesson" : "book.continueLesson")}
+          </Link>
+        </Button>
+      )}
 
       <AlertDialog open={restartOpen} onOpenChange={setRestartOpen}>
         <AlertDialogContent>
@@ -356,41 +344,38 @@ export function LessonListPanel({ book }: { book: Book }) {
         <LessonCard key={view.index} book={book} view={view} />
       ))}
 
-      {/* Whole-book extras kept available, below the lesson flow. */}
-      <div className="mt-1 flex flex-col gap-1 border-t border-border pt-4">
-        <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
-          <Link href={`/books/${book.id}/master`}>
-            <Trophy /> {t("master.title")}
+      {/* Whole-book actions: study from the start, or test everything. */}
+      <div className="mt-1 flex flex-col gap-2 border-t border-border pt-4">
+        <Button asChild size="lg" variant="outline" className="w-full">
+          <Link href={`/learn/${book.id}`}>
+            <Layers /> {t("book.learnFromStart")}
           </Link>
         </Button>
-        <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
-          <Link href={`/statistics?book=${book.id}`}>
-            <BarChart3 /> {t("stats.link")}
+        <Button asChild size="lg" variant="outline" className="w-full">
+          <Link href={`/books/${book.id}/test?mode=full`}>
+            <ClipboardCheck /> {t("book.fullTest")}
           </Link>
         </Button>
-        <Button asChild variant="ghost" size="sm" className="self-center text-muted-foreground">
-          <Link href={`/books/${book.id}/words`}>
-            <BookOpen /> {t("book.manageWords")}
-          </Link>
-        </Button>
-
-        {/* Restart is offered once every lesson is completed. */}
-        {allDone && (
-          <div className="mt-2 flex flex-col items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground"
-              onClick={() => setRestartOpen(true)}
-            >
-              <RotateCcw /> {t("lesson.restart")}
-            </Button>
-            <p className="whitespace-pre-line text-center text-xs text-muted-foreground">
-              {t("lesson.restartDesc")}
-            </p>
-          </div>
-        )}
       </div>
+
+      <BookQuickLinks bookId={book.id} />
+
+      {/* Restart is offered once every lesson is completed. */}
+      {allDone && (
+        <div className="mt-1 flex flex-col items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground"
+            onClick={() => setRestartOpen(true)}
+          >
+            <RotateCcw /> {t("lesson.restart")}
+          </Button>
+          <p className="whitespace-pre-line text-center text-xs text-muted-foreground">
+            {t("lesson.restartDesc")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
