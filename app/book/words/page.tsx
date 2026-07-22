@@ -7,6 +7,7 @@ import { BookOpen, Lock, Plus, Search, Upload } from "lucide-react";
 import { useAppState, useBook } from "@/store/useVocabStore";
 import { useTranslation } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
+import { BookOptions } from "@/components/BookOptions";
 import { BulkImportDialog } from "@/components/BulkImportDialog";
 import { EmptyState } from "@/components/EmptyState";
 import { ExportButton } from "@/components/ExportButton";
@@ -114,6 +115,16 @@ export default function ManageWordsPage() {
               ))}
           </ul>
         </Card>
+      )}
+
+      {/* Book options — rename / reset / delete (user-created books only). */}
+      {!book.builtIn && (
+        <section className="flex flex-col gap-3 border-t border-border pt-6">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            {t("book.bookOptions")}
+          </h2>
+          <BookOptions book={book} />
+        </section>
       )}
     </main>
   );
