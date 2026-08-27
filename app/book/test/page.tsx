@@ -30,6 +30,7 @@ import {
   buildFullTestWords,
   buildLessonTestWords,
   buildMasterReviewWords,
+  buildRemainingTestWords,
   buildTestWords,
   pickWordsByIds,
 } from "@/services/testSession";
@@ -44,16 +45,20 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 type Grade = "correct" | "wrong";
-type Mode = "today" | "full" | "master" | "lesson";
+type Mode = "today" | "full" | "master" | "lesson" | "remaining";
 
 const MODE_LABEL_KEY: Record<Exclude<Mode, "lesson">, TKey> = {
   today: "test.modeToday",
   full: "test.modeFull",
   master: "test.modeMaster",
+  remaining: "test.modeRemaining",
 };
 
 function parseMode(value: string | null): Mode {
-  return value === "full" || value === "master" || value === "lesson"
+  return value === "full" ||
+    value === "master" ||
+    value === "lesson" ||
+    value === "remaining"
     ? value
     : "today";
 }
@@ -103,11 +108,13 @@ function TestRunner() {
       const initial =
         effMode === "full"
           ? buildFullTestWords(book, state.settings)
-          : effMode === "master"
-            ? buildMasterReviewWords(book)
-            : effMode === "lesson" && lessonIndex != null
-              ? buildLessonTestWords(lessons[lessonIndex].words, state.settings)
-              : buildTestWords(book, state.settings);
+          : effMode === "remaining"
+            ? buildRemainingTestWords(book, state.settings)
+            : effMode === "master"
+              ? buildMasterReviewWords(book)
+              : effMode === "lesson" && lessonIndex != null
+                ? buildLessonTestWords(lessons[lessonIndex].words, state.settings)
+                : buildTestWords(book, state.settings);
       setQuestions(initial);
     }
   }, [hydrated, book, questions, state.settings, effMode, lessonIndex, lessons]);
@@ -136,7 +143,10 @@ function TestRunner() {
       book &&
       questions &&
       !isRetry &&
-      (effMode === "today" || effMode === "full" || effMode === "lesson")
+      (effMode === "today" ||
+        effMode === "full" ||
+        effMode === "remaining" ||
+        effMode === "lesson")
     ) {
       recorded.current = true;
       actions.recordSession({
@@ -164,6 +174,7 @@ function TestRunner() {
       !isRetry &&
       (effMode === "today" ||
         effMode === "full" ||
+        effMode === "remaining" ||
         effMode === "master" ||
         effMode === "lesson")
     ) {
@@ -282,7 +293,13 @@ function TestRunner() {
   // Scheduling runs (today / full) confirm the question count, breakdown, and
   // an estimated time before the first question. Master / retry runs skip it.
 
-  if (!started && (effMode === "today" || effMode === "full" || effMode === "lesson")) {
+  if (
+    !started &&
+    (effMode === "today" ||
+      effMode === "full" ||
+      effMode === "remaining" ||
+      effMode === "lesson")
+  ) {
     const reviewN = questions.filter(
       (w) => !w.mastered && w.nextReviewTest <= book.currentTest
     ).length;
@@ -358,9 +375,11 @@ function TestRunner() {
       ? "test.completeRetry"
       : effMode === "full"
         ? "test.completeFull"
-        : effMode === "master"
-          ? "test.completeMaster"
-          : "test.completeToday";
+        : effMode === "remaining"
+          ? "test.completeRemaining"
+          : effMode === "master"
+            ? "test.completeMaster"
+            : "test.completeToday";
 
     // A streak line is shown only for a counted completion (not a retry) once
     // the learner is on a run of 2+ days.

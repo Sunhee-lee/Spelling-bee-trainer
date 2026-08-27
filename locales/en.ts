@@ -93,6 +93,7 @@ export const en: typeof ko = {
     allMasteredDesc: "You mastered all {count} Basic words!\nAmazing work!",
     reviewAll: "Review All",
     testAll: "Test All Words",
+    testRemaining: "Test Remaining Words",
     restart: "Restart Lessons",
     restartDesc: "Reset lesson progress only.\nYour mastery, streaks, and test history will be kept.",
     restartDialogTitle: "Restart lesson progress?",
@@ -177,6 +178,7 @@ export const en: typeof ko = {
   },
   test: {
     modeToday: "Today’s Practice",
+    modeRemaining: "Remaining Words",
     modeFull: "Full Test",
     modeMaster: "Master Check",
     modeWrong: "Wrong Words",
@@ -210,6 +212,7 @@ export const en: typeof ko = {
     msgGreat: "Great Job!",
     msgFinish: "You Finished Strong!",
     completeToday: "Today’s Practice is complete.",
+    completeRemaining: "You practiced the remaining words.",
     completeFull: "Full Test is complete.",
     completeMaster: "Master Check is complete.",
     completeRetry: "Retry complete.",

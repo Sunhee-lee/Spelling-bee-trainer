@@ -4,6 +4,7 @@ import type { AppSettings, Book, Word } from "@/types";
 import {
   buildFullTestWords,
   buildLessonTestWords,
+  buildRemainingTestWords,
   buildTestWords,
 } from "@/services/testSession";
 
@@ -63,6 +64,33 @@ describe("buildLessonTestWords honours the shuffle setting", () => {
   it("shuffle ON → same lesson words, no other words leak in", () => {
     const out = buildLessonTestWords(lesson, settings(true));
     expect(out.map((w) => w.number).sort((a, b) => a - b)).toEqual([21, 22, 23]);
+  });
+});
+
+describe("buildRemainingTestWords — only not-yet-mastered words", () => {
+  const w = (n: number, over: Partial<Word> = {}): Word => ({ ...word(n), ...over });
+
+  it("keeps only not-mastered words, by number when shuffle is off", () => {
+    const b = book([
+      w(3, { mastered: true }),
+      w(1),
+      w(2, { mastered: true }),
+      w(4),
+    ]);
+    expect(buildRemainingTestWords(b, settings(false)).map((x) => x.number)).toEqual([
+      1, 4,
+    ]);
+  });
+
+  it("returns an empty test when every word is mastered", () => {
+    const b = book([w(1, { mastered: true }), w(2, { mastered: true })]);
+    expect(buildRemainingTestWords(b, settings(false))).toEqual([]);
+  });
+
+  it("shuffle ON → same not-mastered set, no mastered word leaks in", () => {
+    const b = book([w(1), w(2, { mastered: true }), w(3), w(4)]);
+    const out = buildRemainingTestWords(b, settings(true));
+    expect(out.map((x) => x.number).sort((a, c) => a - c)).toEqual([1, 3, 4]);
   });
 });
 

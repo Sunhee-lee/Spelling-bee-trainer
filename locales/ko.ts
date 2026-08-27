@@ -92,6 +92,7 @@ export const ko = {
     allMasteredDesc: "Basic 100의 모든 단어를 마스터했어요!\n정말 잘했어요!",
     reviewAll: "전체 복습",
     testAll: "모든 단어 테스트",
+    testRemaining: "남은 단어 테스트",
     restart: "레슨 처음부터 다시하기",
     restartDesc: "레슨 진행도만 초기화됩니다.\n마스터 기록과 테스트 기록은 유지됩니다.",
     restartDialogTitle: "레슨 진행도를 처음부터 다시 시작할까요?",
@@ -176,6 +177,7 @@ export const ko = {
   test: {
     modeToday: "오늘의 학습",
     modeFull: "전체 테스트",
+    modeRemaining: "남은 단어 테스트",
     modeMaster: "마스터 점검",
     modeWrong: "틀린 단어",
     questionOf: "{current} / {total} 문제",
@@ -209,6 +211,7 @@ export const ko = {
     msgFinish: "끝까지 잘했어요!",
     completeToday: "오늘의 학습을 완료했어요.",
     completeFull: "전체 테스트를 완료했어요.",
+    completeRemaining: "남은 단어를 연습했어요.",
     completeMaster: "마스터 점검을 완료했어요.",
     completeRetry: "다시 연습을 마쳤어요.",
     questionsCompleted: "{count}문제 완료",
