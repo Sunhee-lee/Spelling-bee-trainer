@@ -74,6 +74,19 @@ export function buildFullTestWords(book: Book, settings: AppSettings): Word[] {
   return orderByShuffle(book.words, settings.shuffleQuestions);
 }
 
+/**
+ * Remaining-words test: only the not-yet-mastered words, exactly once. A focused
+ * drill toward mastering what's left (offered once every lesson is completed),
+ * distinct from the Full Test's whole-book ability check. Order follows the
+ * "Shuffle Practice Words" setting.
+ */
+export function buildRemainingTestWords(book: Book, settings: AppSettings): Word[] {
+  return orderByShuffle(
+    book.words.filter((w) => !w.mastered),
+    settings.shuffleQuestions
+  );
+}
+
 /** A shuffled review of just the mastered words (optional master check). */
 export function buildMasterReviewWords(book: Book): Word[] {
   return shuffle(book.words.filter((w) => w.mastered));

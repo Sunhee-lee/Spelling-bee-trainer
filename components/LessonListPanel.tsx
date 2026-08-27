@@ -284,9 +284,11 @@ export function LessonListPanel({ book }: { book: Book }) {
               {t("lesson.allCompleteDesc")}
             </p>
             <div className="mt-2 flex w-full flex-col gap-2">
+              {/* Full Test already sits at the bottom of the screen, so here we
+                  offer the focused "drill what's still left" run instead. */}
               <Button asChild size="lg">
-                <Link href={`/books/${book.id}/test?mode=full`}>
-                  <ClipboardCheck /> {t("lesson.testAll")}
+                <Link href={`/books/${book.id}/test?mode=remaining`}>
+                  <ClipboardCheck /> {t("lesson.testRemaining")}
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
